@@ -1,0 +1,155 @@
+
+package com.example.acwa.services;
+import com.example.acwa.Dto.SignupRequest;
+import com.example.acwa.entities.Role;
+import com.example.acwa.entities.RoleName;
+import com.example.acwa.entities.User;
+import com.example.acwa.entities.VerificationToken;
+import com.example.acwa.repositories.RoleRepository;
+import com.example.acwa.repositories.UserRepository;
+import com.example.acwa.repositories.VerificationTokenRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    public void registerUser(SignupRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already taken");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already used");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEnabled(false); // Désactive le compte jusqu'à validation
+
+        Set<Role> userRoles = new HashSet<>();
+
+        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+            Role defaultRole = roleRepository.findByName(RoleName.ROLE_VISITOR)
+                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+            userRoles.add(defaultRole);
+        } else {
+            for (String roleStr : request.getRoles()) {
+                RoleName roleName = RoleName.valueOf("ROLE_" + roleStr.toUpperCase());
+                Role role = roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role not found"));
+                userRoles.add(role);
+            }
+        }
+
+        user.setRoles(userRoles);
+        userRepository.save(user);
+
+        // --- Génère un token de vérification ---
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(token);
+        verificationToken.setUser(user);
+        verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24)); // valable 24h
+        verificationTokenRepository.save(verificationToken);
+
+        // --- Prépare et envoie le mail de vérification ---
+        String url = "http://localhost:8090/api/auth/verify?token=" + token;
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setSubject("Vérification de votre email");
+        mailMessage.setText(
+                "Bonjour " + user.getUsername() + ",\n\n"
+                        + "Merci de vous être inscrit. Veuillez cliquer sur le lien ci-dessous pour activer votre compte :\n"
+                        + url + "\n\n"
+                        + "Ce lien est valable 24h.\n\nL'équipe ACWA."
+        );
+
+        mailSender.send(mailMessage);
+    }
+
+
+//    public void registerUser(SignupRequest request) {
+//        if (userRepository.existsByUsername(request.getUsername())) {
+//            throw new RuntimeException("Username already taken");
+//        }
+//
+//        if (userRepository.existsByEmail(request.getEmail())) {
+//            throw new RuntimeException("Email already used");
+//        }
+//
+//        User user = new User();
+//        user.setUsername(request.getUsername());
+//        user.setEmail(request.getEmail());
+//        user.setPassword(passwordEncoder.encode(request.getPassword()));
+//
+//        Set<Role> userRoles = new HashSet<>();
+//
+//        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+//            Role defaultRole = roleRepository.findByName(RoleName.ROLE_VISITOR)
+//                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+//            userRoles.add(defaultRole);
+//        } else {
+//            for (String roleStr : request.getRoles()) {
+//                RoleName roleName = RoleName.valueOf("ROLE_" + roleStr.toUpperCase());
+//                Role role = roleRepository.findByName(roleName)
+//                        .orElseThrow(() -> new RuntimeException("Role not found"));
+//                userRoles.add(role);
+//            }
+//        }
+//
+//        user.setRoles(userRoles);
+//        userRepository.save(user);
+//    }
+
+    public void changeUserRole(Long userId, String newRoleName) {
+        if (newRoleName == null || newRoleName.isBlank()) {
+            throw new RuntimeException("Role is required");
+        }
+        RoleName rn;
+        try {
+            rn = RoleName.valueOf(newRoleName);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Invalid role: " + newRoleName);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Role role = roleRepository.findByName(rn)
+                .orElseThrow(() -> new RuntimeException("Role not found in DB: " + rn));
+        user.setRoles(Set.of(role));
+        userRepository.save(user);
+    }
+
+}
+
+
+
+
+
+
