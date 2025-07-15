@@ -36,7 +36,7 @@ public class ProjectController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjectController.class);
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @PostMapping("/create")
     public ResponseEntity<?> createProject(@RequestBody ProjectRequestDTO requestDTO, Authentication authentication) {
         String username = authentication.getName();
@@ -65,14 +65,15 @@ public class ProjectController {
         }
     }
 
+
     @GetMapping("/operators")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     public List<String> getOperatorUsernames() {
         List<User> users = userRepository.findAll();
         return users.stream()
                 .filter(u -> u.getRoles().stream()
                         .anyMatch(role ->
-                                role.getName() == RoleName.ROLE_OPERATOR ||
+                                role.getName() == RoleName.ROLE_CREATOR ||
                                         role.getName() == RoleName.ROLE_ADMIN))
                 .map(User::getUsername)
                 .toList();
@@ -94,7 +95,7 @@ public class ProjectController {
 //        return ResponseEntity.ok(dtos);
 //    }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @GetMapping
     public ResponseEntity<PageResult<ProjectResponseDTO>> getAllProjects(
             Authentication authentication,
@@ -127,7 +128,7 @@ public class ProjectController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @PutMapping("/{id}/update")
     public ResponseEntity<?> updateProject(
             @PathVariable Long id,
@@ -142,7 +143,7 @@ public class ProjectController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @DeleteMapping("/{id}/delete")
     public ResponseEntity<?> deleteProject(
             @PathVariable Long id,
@@ -156,7 +157,7 @@ public class ProjectController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @GetMapping("/search")
     public ResponseEntity<PageResult<ProjectResponseDTO>> searchProjects(
             Authentication authentication,
@@ -187,7 +188,7 @@ public class ProjectController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponseDTO> getProjectById(
             @PathVariable Long id,

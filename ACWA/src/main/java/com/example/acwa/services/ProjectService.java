@@ -56,7 +56,7 @@ public class ProjectService {
 
         // Seuls les ADMIN ou OPERATOR peuvent créer un projet
         boolean isAllowed = user.getRoles().stream()
-                .anyMatch(role -> role.getName().equals(RoleName.ROLE_ADMIN) || role.getName().equals(RoleName.ROLE_OPERATOR));
+                .anyMatch(role -> role.getName().equals(RoleName.ROLE_ADMIN) || role.getName().equals(RoleName.ROLE_CREATOR));
 
         if (!isAllowed) {
             throw new RuntimeException("Unauthorized: Only ADMIN or OPERATOR can create a project");

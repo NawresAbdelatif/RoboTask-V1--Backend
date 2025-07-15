@@ -1,6 +1,9 @@
 
 package com.example.acwa.services;
+import com.example.acwa.Dto.PasswordChangeDTO;
 import com.example.acwa.Dto.SignupRequest;
+import com.example.acwa.Dto.UserProfileDTO;
+import com.example.acwa.Dto.UserProfileUpdateDTO;
 import com.example.acwa.entities.Role;
 import com.example.acwa.entities.RoleName;
 import com.example.acwa.entities.User;
@@ -17,6 +20,8 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -128,6 +133,41 @@ public class UserService {
 //        userRepository.save(user);
 //    }
 
+    public UserProfileDTO getUserProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        UserProfileDTO dto = new UserProfileDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRoles(user.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toSet()));
+        return dto;
+    }
+
+    public UserProfileDTO updateUserProfile(String username, UserProfileUpdateDTO updateDTO) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        // Si l'email change, vérifie qu'il n'est pas déjà utilisé par un autre user
+        if (!user.getEmail().equals(updateDTO.getEmail()) && userRepository.existsByEmail(updateDTO.getEmail())) {
+            throw new RuntimeException("Cet email est déjà utilisé");
+        }
+        user.setUsername(updateDTO.getUsername());
+        user.setEmail(updateDTO.getEmail());
+        userRepository.save(user);
+        return getUserProfile(username);
+    }
+
+    public void changePassword(String username, PasswordChangeDTO dto) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Ancien mot de passe incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+    }
+
+
     public void changeUserRole(Long userId, String newRoleName) {
         if (newRoleName == null || newRoleName.isBlank()) {
             throw new RuntimeException("Role is required");
@@ -142,8 +182,18 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Role role = roleRepository.findByName(rn)
                 .orElseThrow(() -> new RuntimeException("Role not found in DB: " + rn));
-        user.setRoles(Set.of(role));
+        Set<Role> roleSet = new HashSet<>();
+        roleSet.add(role);
+        user.setRoles(roleSet);
         userRepository.save(user);
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("Utilisateur introuvable");
+        }
+        verificationTokenRepository.deleteAllByUserId(userId);
+        userRepository.deleteById(userId);
     }
 
 }

@@ -1,8 +1,6 @@
 package com.example.acwa.controllers;
 
-import com.example.acwa.Dto.LoginRequest;
-import com.example.acwa.Dto.SignupRequest;
-import com.example.acwa.Dto.JwtResponse;
+import com.example.acwa.Dto.*;
 import com.example.acwa.entities.User;
 import com.example.acwa.repositories.UserRepository;
 import com.example.acwa.security.JwtService;
@@ -15,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +21,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import com.example.acwa.repositories.VerificationTokenRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.util.HashMap;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.Map;
-import com.example.acwa.Dto.UserResponseDTO;
 
 
 import java.util.List;
@@ -159,13 +159,56 @@ public class AuthController {
     public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestBody Map<String, String> req) {
         try {
             String newRole = req.get("role");
+            System.out.println("========= ROLE DEMANDE: " + newRole);
             userService.changeUserRole(userId, newRole);
             return ResponseEntity.ok(Map.of("message", "Rôle mis à jour"));
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
+    }
+    @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok(Map.of("message", "Utilisateur supprimé !"));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
+
+    // Récupérer le profil de l'utilisateur courant
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDTO> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        return ResponseEntity.ok(userService.getUserProfile(currentUser.getUsername()));
+    }
+
+    @PutMapping("/updateProfile")
+    public ResponseEntity<?> updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @RequestBody UserProfileUpdateDTO dto) {
+        UserProfileDTO updated = userService.updateUserProfile(currentUser.getUsername(), dto);
+
+        // Regénère le JWT si le username a changé
+        if (!currentUser.getUsername().equals(dto.getUsername())) {
+            // Génère un nouveau JWT pour le nouveau username
+            String newToken = jwtUtils.generateJwtTokenForUsername(dto.getUsername());
+            Map<String, Object> response = new HashMap<>();
+            response.put("profile", updated);
+            response.put("token", newToken);
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.ok(Map.of("profile", updated));
+    }
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @RequestBody PasswordChangeDTO dto) {
+        userService.changePassword(currentUser.getUsername(), dto);
+        return ResponseEntity.ok(Map.of("message", "Mot de passe modifié, veuillez vous reconnecter."));
+    }
 
 
 }
