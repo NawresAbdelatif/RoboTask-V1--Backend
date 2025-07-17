@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -70,31 +72,40 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        try {
+            UsernamePasswordAuthenticationToken authRequest =
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword());
+            authRequest.setDetails(new WebAuthenticationDetails(request));
+            Authentication authentication = authenticationManager.authenticate(authRequest);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UsernamePasswordAuthenticationToken authRequest =
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            String jwt = jwtUtils.generateJwtToken(userDetails);
+            List<String> roles = userDetails.getAuthorities()
+                    .stream().map(item -> item.getAuthority()).toList();
 
-        // Ajoute explicitement les WebAuthenticationDetails
-        authRequest.setDetails(new WebAuthenticationDetails(request));
+            JwtResponse jwtResponse = new JwtResponse();
+            jwtResponse.setToken(jwt);
+            jwtResponse.setUsername(userDetails.getUsername());
+            jwtResponse.setRoles(roles);
 
-        Authentication authentication = authenticationManager.authenticate(authRequest);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            return ResponseEntity.ok(jwtResponse);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String jwt = jwtUtils.generateJwtToken(userDetails);
-
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(item -> item.getAuthority())
-                .toList();
-
-        JwtResponse jwtResponse = new JwtResponse();
-        jwtResponse.setToken(jwt);
-        jwtResponse.setUsername(userDetails.getUsername());
-        jwtResponse.setRoles(roles);
-
-        return ResponseEntity.ok(jwtResponse);
+        } catch (DisabledException ex) {
+            // Compte désactivé
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Votre compte est désactivé. Veuillez contacter l'administrateur."));
+        } catch (BadCredentialsException ex) {
+            // Identifiants invalides
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "Identifiants invalides"));
+        } catch (Exception ex) {
+            // Autres erreurs
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Erreur interne : " + ex.getMessage()));
+        }
     }
+
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
@@ -116,43 +127,25 @@ public class AuthController {
     public ResponseEntity<?> verifyAccount(@RequestParam String token) {
         var optToken = verificationTokenRepository.findByToken(token);
         if (optToken.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Token invalide"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Lien d’activation invalide ou expiré."));
         }
+
         var verificationToken = optToken.get();
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Token expiré"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Lien d’activation expiré."));
         }
+
         User user = verificationToken.getUser();
+        if (user.isEnabled()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Ce compte est déjà activé."));
+        }
+
         user.setEnabled(true);
         userRepository.save(user);
-
-        verificationTokenRepository.delete(verificationToken); // Token à usage unique
+        verificationTokenRepository.delete(verificationToken);
         return ResponseEntity.ok(Map.of("message", "Compte activé, vous pouvez vous connecter."));
     }
-    @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponseDTO>> getUsers(
-            @RequestParam(required = false) String q,
-            @RequestParam(required = false) String role
-    ) {
-        List<User> users = userRepository.findAll();
 
-        List<UserResponseDTO> result = users.stream()
-                .filter(u -> (q == null || u.getUsername().toLowerCase().contains(q.toLowerCase()) || u.getEmail().toLowerCase().contains(q.toLowerCase())))
-                .filter(u -> (role == null || u.getRoles().stream().anyMatch(r -> r.getName().name().equals(role))))
-                .map(u -> {
-                    UserResponseDTO dto = new UserResponseDTO();
-                    dto.setId(u.getId());
-                    dto.setUsername(u.getUsername());
-                    dto.setEmail(u.getEmail());
-                    Set<String> roles = u.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toSet());
-                    dto.setRoles(roles);
-                    return dto;
-                })
-                .toList();
-
-        return ResponseEntity.ok(result);
-    }
 
     @PutMapping("/users/{userId}/role")
     @PreAuthorize("hasRole('ADMIN')")
@@ -178,12 +171,29 @@ public class AuthController {
         }
     }
 
-
-    // Récupérer le profil de l'utilisateur courant
-    @GetMapping("/profile")
-    public ResponseEntity<UserProfileDTO> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-        return ResponseEntity.ok(userService.getUserProfile(currentUser.getUsername()));
+    @PutMapping("/users/{userId}/enabled")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> setUserEnabled(@PathVariable Long userId, @RequestBody Map<String, Boolean> req) {
+        try {
+            Boolean enabled = req.get("enabled");
+            userService.setUserEnabled(userId, enabled != null ? enabled : false);
+            return ResponseEntity.ok(Map.of("message", "Statut de l'utilisateur mis à jour !"));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDTO> getProfile() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetailsImpl userDetails) {
+            return ResponseEntity.ok(userService.getUserProfile(userDetails.getUsername()));
+        }
+
+        return ResponseEntity.badRequest().build();
+    }
+
 
     @PutMapping("/updateProfile")
     public ResponseEntity<?> updateProfile(
@@ -208,6 +218,35 @@ public class AuthController {
             @RequestBody PasswordChangeDTO dto) {
         userService.changePassword(currentUser.getUsername(), dto);
         return ResponseEntity.ok(Map.of("message", "Mot de passe modifié, veuillez vous reconnecter."));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> req) {
+        userService.generatePasswordResetToken(req.get("email"));
+        return ResponseEntity.ok(Map.of("message", "Si ce mail existe, un lien de réinitialisation a été envoyé."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestBody Map<String, String> req) {
+        userService.resetPassword(token, req.get("password"));
+        return ResponseEntity.ok(Map.of("message", "Mot de passe réinitialisé. Vous pouvez vous connecter."));
+    }
+
+//    @GetMapping("/users")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<List<UserProfileDTO>> getAllUsers() {
+//        List<UserProfileDTO> users = userService.getAllUserProfiles();
+//        return ResponseEntity.ok(users);
+//    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserProfileDTO>> getAllUsers(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String role
+    ) {
+        List<UserProfileDTO> users = userService.getFilteredUsers(q, role);
+        return ResponseEntity.ok(users);
     }
 
 

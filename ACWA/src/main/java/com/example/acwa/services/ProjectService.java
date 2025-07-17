@@ -50,11 +50,10 @@ public class ProjectService {
 
 
     @Transactional
-    public Project createProject(Project project, String username) {
-        User user = userRepository.findByUsername(username)
+    public Project createProject(Project project, String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Seuls les ADMIN ou OPERATOR peuvent créer un projet
         boolean isAllowed = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals(RoleName.ROLE_ADMIN) || role.getName().equals(RoleName.ROLE_CREATOR));
 
@@ -66,36 +65,33 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    public void addCollaborator(Long projectId, String currentUsername, String collaboratorUsername) {
+    public void addCollaborator(Long projectId, String currentEmail, String collaboratorEmail) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Projet introuvable"));
 
-        User collaborator = userRepository.findByUsername(collaboratorUsername)
+        User collaborator = userRepository.findByEmail(collaboratorEmail)
                 .orElseThrow(() -> new RuntimeException("Collaborateur non trouvé"));
 
-        User currentUser = userRepository.findByUsername(currentUsername)
+        User currentUser = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur courant introuvable"));
 
-        // Seuls l’admin OU le créateur peuvent ajouter des collaborateurs
         boolean isAdmin = currentUser.getRoles().stream()
                 .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
-        boolean isCreator = project.getCreator().getUsername().equals(currentUsername);
+        boolean isCreator = project.getCreator().getEmail().equals(currentEmail);
 
         if (!isAdmin && !isCreator) {
             throw new RuntimeException("Seul l'administrateur ou le créateur du projet peut ajouter des collaborateurs !");
         }
 
-
-
         project.getCollaborators().add(collaborator);
         projectRepository.save(project);
 
-        // Notification
         String msg = "Vous avez été invité au projet : " + project.getName();
         notificationService.createNotification(msg, collaborator);
 
         evictProjectCache(project);
     }
+
 
 
 //    public List<Project> getProjectsForUser(User user) {
@@ -124,27 +120,52 @@ public class ProjectService {
 //        }
 //    }
 
+//    @Cacheable(value = "projectsByUser", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+//    public Page<Project> getProjectsForUser(User user, Pageable pageable) {
+//        return projectRepository.findActiveByUser(user, pageable);
+//    }
+
+
     @Cacheable(value = "projectsByUser", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<Project> getProjectsForUser(User user, Pageable pageable) {
-        long start = System.currentTimeMillis();
-         System.out.println(">>> Appel à la base de données pour l'utilisateur: " + user.getUsername());
+        boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
 
-        boolean isAdmin = user.getRoles().stream()
-                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
-
-        Page<Project> result;
         if (isAdmin) {
-            result = projectRepository.findAll(pageable);
+            return projectRepository.findAllByArchivedFalse(pageable);
         } else {
-            result = projectRepository.findAllByCreatorOrCollaboratorsContaining(user, user, pageable);
+            return projectRepository.findActiveByUser(user, pageable);
         }
-
-        long duration = System.currentTimeMillis() - start;
-        System.out.println("[PERF] getProjectsForUser(" + user.getUsername() + ", page=" + pageable.getPageNumber() +
-                ", size=" + pageable.getPageSize() + ") a pris " + duration + " ms");
-
-        return result;
     }
+    public Page<Project> getArchivedProjectsForUser(User user, Pageable pageable) {
+        boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+        if (isAdmin) {
+            return projectRepository.findAllByArchivedTrue(pageable);
+        } else {
+            return projectRepository.findArchivedByUser(user, pageable);
+        }
+    }
+
+//    public Page<Project> getProjectsForUser(User user, Pageable pageable) {
+//        long start = System.currentTimeMillis();
+//         System.out.println(">>> Appel à la base de données pour l'utilisateur: " + user.getUsername());
+//
+//        boolean isAdmin = user.getRoles().stream()
+//                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+//
+//        Page<Project> result;
+//        if (isAdmin) {
+//            result = projectRepository.findAll(pageable);
+//        } else {
+//            result = projectRepository.findAllByCreatorOrCollaboratorsContaining(user, user, pageable);
+//        }
+//
+//        long duration = System.currentTimeMillis() - start;
+//        System.out.println("[PERF] getProjectsForUser(" + user.getUsername() + ", page=" + pageable.getPageNumber() +
+//                ", size=" + pageable.getPageSize() + ") a pris " + duration + " ms");
+//
+//        return result;
+//    }
 
 //
 //    @Transactional
@@ -170,17 +191,19 @@ public class ProjectService {
 
     @Transactional
     @CacheEvict(value = "projectsByUser", allEntries = true)
-    public Project updateProject(Long projectId, ProjectRequestDTO dto, String username) {
+    public Project updateProject(Long projectId, ProjectRequestDTO dto, String email) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Projet introuvable"));
-        User user = userRepository.findByUsername(username)
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"));
 
-        if (!isAdmin && !project.getCreator().getUsername().equals(username)) {
+        if (!isAdmin && !project.getCreator().getEmail().equals(email)) {
             throw new RuntimeException("Vous n'avez pas le droit de modifier ce projet !");
         }
+
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());
@@ -195,51 +218,71 @@ public class ProjectService {
 
     @Transactional
     @CacheEvict(value = "projectsByUser", allEntries = true)
-    public void deleteProject(Long projectId, String username) {
-        System.out.println("Tentative suppression projet " + projectId + " par " + username);
+    public void deleteProject(Long projectId, String email) {
+        System.out.println("Tentative suppression projet " + projectId + " par " + email);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Projet introuvable"));
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"));
 
-        System.out.println("User roles: " + user.getRoles());
-        System.out.println("Project creator: " + project.getCreator().getUsername());
-        System.out.println("isAdmin: " + isAdmin);
-
-        if (!isAdmin && !project.getCreator().getUsername().equals(username)) {
+        if (!isAdmin && !project.getCreator().getEmail().equals(email)) {
             throw new RuntimeException("Vous n'avez pas le droit de supprimer ce projet !");
         }
 
         evictProjectCache(project);
-
         projectRepository.delete(project);
-        System.out.println("Projet " + projectId + " supprimé par " + username);
+        System.out.println("Projet " + projectId + " supprimé par " + email);
     }
 
-    @Cacheable(value = "projectsByUser", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #search + '-' + #status")
+
+//    @Cacheable(value = "projectsByUser", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #search + '-' + #status")
+//    public Page<Project> searchProjectsForUser(User user, String search, ProjectStatus status, Pageable pageable) {
+//        return projectRepository.searchActiveByUser(user, search, status, pageable);
+//    }
+
+//    public Page<Project> searchProjectsForUser(User user, String search, ProjectStatus status, Pageable pageable) {
+//        boolean isAdmin = user.getRoles().stream()
+//                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+//
+//        if (isAdmin) {
+//            if (status != null)
+//                return projectRepository.findAllByNameContainingIgnoreCaseAndStatus(search, status, pageable);
+//            else
+//                return projectRepository.findAllByNameContainingIgnoreCase(search, pageable);
+//        } else {
+//            if (status != null)
+//                return projectRepository.findAllByNameContainingIgnoreCaseAndStatusAndCreatorOrNameContainingIgnoreCaseAndStatusAndCollaboratorsContaining(
+//                        search, status, user, search, status, user, pageable);
+//            else
+//                return projectRepository.findAllByNameContainingIgnoreCaseAndCreatorOrNameContainingIgnoreCaseAndCollaboratorsContaining(
+//                        search, user, search, user, pageable);
+//        }
+//    }
+
+
+
     public Page<Project> searchProjectsForUser(User user, String search, ProjectStatus status, Pageable pageable) {
         boolean isAdmin = user.getRoles().stream()
                 .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
 
         if (isAdmin) {
             if (status != null)
-                return projectRepository.findAllByNameContainingIgnoreCaseAndStatus(search, status, pageable);
+                return projectRepository.findAllByNameContainingIgnoreCaseAndStatusAndArchivedFalse(search, status, pageable);
             else
-                return projectRepository.findAllByNameContainingIgnoreCase(search, pageable);
+                return projectRepository.findAllByNameContainingIgnoreCaseAndArchivedFalse(search, pageable);
         } else {
             if (status != null)
-                return projectRepository.findAllByNameContainingIgnoreCaseAndStatusAndCreatorOrNameContainingIgnoreCaseAndStatusAndCollaboratorsContaining(
+                return projectRepository.findAllByNameContainingIgnoreCaseAndStatusAndArchivedFalseAndCreatorOrNameContainingIgnoreCaseAndStatusAndArchivedFalseAndCollaboratorsContaining(
                         search, status, user, search, status, user, pageable);
             else
-                return projectRepository.findAllByNameContainingIgnoreCaseAndCreatorOrNameContainingIgnoreCaseAndCollaboratorsContaining(
+                return projectRepository.findAllByNameContainingIgnoreCaseAndArchivedFalseAndCreatorOrNameContainingIgnoreCaseAndArchivedFalseAndCollaboratorsContaining(
                         search, user, search, user, pageable);
         }
     }
-
 
     public Project getProjectByIdAndUser(Long projectId, User user) {
         boolean isAdmin = user.getRoles().stream()
@@ -276,5 +319,45 @@ public class ProjectService {
         }
         return map;
     }
+
+    @Transactional
+    public void archiveProject(Long projectId, String email) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"));
+        if (!isAdmin && !project.getCreator().getEmail().equals(email)) {
+            throw new RuntimeException("Vous n'avez pas le droit d'archiver ce projet !");
+        }
+
+        project.setArchived(true);
+        projectRepository.save(project);
+    }
+
+
+//    public Page<Project> getArchivedProjectsForUser(User user, Pageable pageable) {
+//        return projectRepository.findArchivedByUser(user, pageable);
+//    }
+
+    @Transactional
+    public void unarchiveProject(Long projectId, String email) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"));
+        if (!isAdmin && !project.getCreator().getEmail().equals(email)) {
+            throw new RuntimeException("Vous n'avez pas le droit de désarchiver ce projet !");
+        }
+
+        project.setArchived(false);
+        projectRepository.save(project);
+    }
+
 }
 

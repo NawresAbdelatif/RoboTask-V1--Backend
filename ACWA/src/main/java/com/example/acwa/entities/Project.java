@@ -40,6 +40,11 @@ public class Project {
     private Set<User> collaborators = new HashSet<>();
 
 
+    @Column(nullable = false)
+    private boolean archived = false;
+
+
+
     // ----- Getters and setters -----
 
     public Long getId() {
@@ -90,5 +95,8 @@ public class Project {
     public void setCollaborators(Set<User> collaborators) {
         this.collaborators = collaborators;
     }
+
+    public boolean isArchived() { return archived; }
+    public void setArchived(boolean archived) { this.archived = archived; }
 
 }

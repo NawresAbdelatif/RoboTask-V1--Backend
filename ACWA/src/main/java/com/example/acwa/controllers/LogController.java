@@ -40,4 +40,10 @@ public class LogController {
 
         return result;
     }
+
+    @DeleteMapping("/clear")
+    public void clearLogs() {
+        logEntryRepository.deleteAll();
+    }
+
 }

@@ -15,6 +15,7 @@ public class ProjectMapper {
         project.setStatus(dto.getStatus());
         project.setStartDate(dto.getStartDate());
         project.setEndDate(dto.getEndDate());
+        project.setArchived(dto.isArchived());
         return project;
     }
 
@@ -32,6 +33,7 @@ public class ProjectMapper {
                         .map(user -> user.getUsername())
                         .collect(Collectors.toSet())
         );
+        dto.setArchived(project.isArchived());
         return dto;
     }
 }

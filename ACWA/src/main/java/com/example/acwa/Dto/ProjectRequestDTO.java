@@ -10,6 +10,8 @@ public class ProjectRequestDTO {
     private ProjectStatus status;
     private LocalDate startDate;
     private LocalDate endDate;
+    private boolean archived;
+
 
     // Getters & Setters
     public String getName() {
@@ -51,4 +53,8 @@ public class ProjectRequestDTO {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
+
+
+    public boolean isArchived() { return archived; }
+    public void setArchived(boolean archived) { this.archived = archived; }
 }

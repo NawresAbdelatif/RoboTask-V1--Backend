@@ -1,4 +1,3 @@
-
 package com.example.acwa.services;
 import com.example.acwa.Dto.PasswordChangeDTO;
 import com.example.acwa.Dto.SignupRequest;
@@ -18,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -44,9 +44,7 @@ public class UserService {
     private JavaMailSender mailSender;
 
     public void registerUser(SignupRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already taken");
-        }
+
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already used");
@@ -85,8 +83,7 @@ public class UserService {
         verificationTokenRepository.save(verificationToken);
 
         // --- Prépare et envoie le mail de vérification ---
-        String url = "http://localhost:8090/api/auth/verify?token=" + token;
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        String url = "http://localhost:4200/activate?token=" + token;        SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Vérification de votre email");
         mailMessage.setText(
@@ -99,6 +96,42 @@ public class UserService {
         mailSender.send(mailMessage);
     }
 
+    public void generatePasswordResetToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Aucun utilisateur"));
+
+        // Supprimer l'ancien token de ce user s'il existe
+        verificationTokenRepository.deleteAllByUserId(user.getId());
+
+        String token = UUID.randomUUID().toString();
+        VerificationToken resetToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(1));
+        verificationTokenRepository.save(resetToken);
+
+        String url = "http://localhost:4200/pages/reset-password?token=" + token;
+
+        // Préparer et envoyer le mail ici !
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setSubject("Réinitialisation de votre mot de passe");
+        mailMessage.setText(
+                "Bonjour " + user.getUsername() + ",\n\n"
+                        + "Veuillez cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
+                        + url + "\n\n"
+                        + "Ce lien est valable 1h.\n\nL'équipe ACWA."
+        );
+
+        mailSender.send(mailMessage);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        VerificationToken vt = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Token invalide"));
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) throw new RuntimeException("Token expiré");
+        User user = vt.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        verificationTokenRepository.delete(vt);
+    }
 
 //    public void registerUser(SignupRequest request) {
 //        if (userRepository.existsByUsername(request.getUsername())) {
@@ -134,7 +167,7 @@ public class UserService {
 //    }
 
     public UserProfileDTO getUserProfile(String username) {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
         UserProfileDTO dto = new UserProfileDTO();
         dto.setId(user.getId());
@@ -145,7 +178,7 @@ public class UserService {
     }
 
     public UserProfileDTO updateUserProfile(String username, UserProfileUpdateDTO updateDTO) {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
         // Si l'email change, vérifie qu'il n'est pas déjà utilisé par un autre user
         if (!user.getEmail().equals(updateDTO.getEmail()) && userRepository.existsByEmail(updateDTO.getEmail())) {
@@ -158,7 +191,7 @@ public class UserService {
     }
 
     public void changePassword(String username, PasswordChangeDTO dto) {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
         if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
             throw new RuntimeException("Ancien mot de passe incorrect");
@@ -195,6 +228,57 @@ public class UserService {
         verificationTokenRepository.deleteAllByUserId(userId);
         userRepository.deleteById(userId);
     }
+    public void setUserEnabled(Long userId, boolean enabled) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        user.setEnabled(enabled);
+        userRepository.save(user);
+    }
+
+    public List<UserProfileDTO> getAllUserProfiles() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserProfileDTO dto = new UserProfileDTO();
+                    dto.setId(user.getId());
+                    dto.setUsername(user.getUsername());
+                    dto.setEmail(user.getEmail());
+                    dto.setRoles(user.getRoles().stream()
+                            .map(role -> role.getName().name())
+                            .collect(Collectors.toSet()));
+                    dto.setEnabled(user.isEnabled());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public List<UserProfileDTO> getFilteredUsers(String query, String role) {
+        return userRepository.findAll().stream()
+                .filter(user -> {
+                    boolean matchesQuery = (query == null || query.isBlank()) ||
+                            user.getUsername().toLowerCase().contains(query.toLowerCase()) ||
+                            user.getEmail().toLowerCase().contains(query.toLowerCase());
+
+                    boolean matchesRole = (role == null || role.equalsIgnoreCase("all")) ||
+                            user.getRoles().stream()
+                                    .anyMatch(r -> r.getName().name().equalsIgnoreCase(role));
+
+                    return matchesQuery && matchesRole;
+                })
+                .map(user -> {
+                    UserProfileDTO dto = new UserProfileDTO();
+                    dto.setId(user.getId());
+                    dto.setUsername(user.getUsername());
+                    dto.setEmail(user.getEmail());
+                    dto.setRoles(user.getRoles().stream()
+                            .map(r -> r.getName().name())
+                            .collect(Collectors.toSet()));
+                    dto.setEnabled(user.isEnabled());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
 
 }
 

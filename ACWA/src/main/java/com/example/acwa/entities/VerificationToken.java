@@ -15,6 +15,13 @@ public class VerificationToken {
     @OneToOne
     private User user;
 
+    public VerificationToken(String token, User user, LocalDateTime expiryDate) {
+        this.token = token;
+        this.user = user;
+        this.expiryDate = expiryDate;
+    }
+    public VerificationToken() {}
+
     // --- Getters ---
     public Long getId() {
         return id;

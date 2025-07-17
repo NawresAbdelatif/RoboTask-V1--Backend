@@ -63,7 +63,7 @@ public class User implements Serializable {
     private Set<Role> roles = new HashSet<>();
 
     @Column(name = "enabled")
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     public boolean isEnabled() {
         return enabled;

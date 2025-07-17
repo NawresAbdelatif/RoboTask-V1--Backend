@@ -14,6 +14,9 @@ public class ProjectResponseDTO {
     private LocalDate endDate;
     private String creatorUsername;
     private Set<String> collaboratorsUsernames;
+    private boolean archived;
+
+
 
     // Getters & Setters
     public Long getId() {
@@ -79,4 +82,7 @@ public class ProjectResponseDTO {
     public void setCollaboratorsUsernames(Set<String> collaboratorsUsernames) {
         this.collaboratorsUsernames = collaboratorsUsernames;
     }
+
+    public boolean isArchived() { return archived; }
+    public void setArchived(boolean archived) { this.archived = archived; }
 }

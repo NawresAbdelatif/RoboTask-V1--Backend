@@ -7,6 +7,7 @@ public class UserProfileDTO {
     private String username;
     private String email;
     private Set<String> roles;
+    private boolean enabled;
 
     public UserProfileDTO() {}
 
@@ -40,5 +41,13 @@ public class UserProfileDTO {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }
