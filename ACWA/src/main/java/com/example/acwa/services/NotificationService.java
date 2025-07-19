@@ -22,23 +22,26 @@ public class NotificationService {
         notificationRepository.save(notif);
     }
 
-    public List<Notification> getUserNotifications(String username) {
-        return notificationRepository.findByRecipientUsernameOrderByCreatedAtDesc(username);
+    public List<Notification> getUserNotifications(String email) {
+        return notificationRepository.findByRecipientEmailOrderByCreatedAtDesc(email);
     }
-
-    public long countUnread(String username) {
-        return notificationRepository.countByRecipientUsernameAndReadFalse(username);
+    public long countUnread(String email) {
+        return notificationRepository.countByRecipientEmailAndReadFalse(email);
     }
-    public void markAllAsRead(String username) {
-        List<Notification> notifs = notificationRepository.findByRecipientUsername(username);
-        for (Notification n : notifs) {
-            n.setRead(true);
-        }
+    public void markAllAsRead(String email) {
+        List<Notification> notifs = notificationRepository.findByRecipientEmail(email);
+        for (Notification n : notifs) n.setRead(true);
         notificationRepository.saveAll(notifs);
     }
-    public List<Notification> getUnreadNotifications(String username) {
-        return notificationRepository.findByRecipientUsernameAndReadFalse(username);
+    public List<Notification> getUnreadNotifications(String email) {
+        return notificationRepository.findByRecipientEmailAndReadFalse(email);
     }
+
+    public void deleteAllForUser(String email) {
+        List<Notification> notifs = notificationRepository.findByRecipientEmail(email);
+        notificationRepository.deleteAll(notifs);
+    }
+
 
 
 

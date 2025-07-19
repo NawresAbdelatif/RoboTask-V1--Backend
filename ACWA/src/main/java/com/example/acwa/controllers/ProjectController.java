@@ -79,6 +79,26 @@ public class ProjectController {
                 .toList();
     }
 
+    @GetMapping("/collaborators/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    public List<Map<String, String>> searchCollaborators(@RequestParam String q) {
+        return userRepository.findAll().stream()
+                .filter(u ->
+                        (u.getRoles().stream().anyMatch(r ->
+                                r.getName() == RoleName.ROLE_CREATOR || r.getName() == RoleName.ROLE_ADMIN)) &&
+                                (
+                                        u.getUsername().toLowerCase().contains(q.toLowerCase()) ||
+                                                u.getEmail().toLowerCase().contains(q.toLowerCase())
+                                )
+                )
+                .map(u -> Map.of(
+                        "username", u.getUsername(),
+                        "email", u.getEmail()
+                ))
+                .toList();
+    }
+
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @GetMapping
     public ResponseEntity<PageResult<ProjectResponseDTO>> getAllProjects(

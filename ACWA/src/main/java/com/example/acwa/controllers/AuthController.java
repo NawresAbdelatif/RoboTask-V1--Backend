@@ -8,6 +8,7 @@ import com.example.acwa.security.JwtUtils;
 import com.example.acwa.security.UserDetailsImpl;
 import com.example.acwa.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -84,9 +85,12 @@ public class AuthController {
             List<String> roles = userDetails.getAuthorities()
                     .stream().map(item -> item.getAuthority()).toList();
 
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
             JwtResponse jwtResponse = new JwtResponse();
             jwtResponse.setToken(jwt);
-            jwtResponse.setUsername(userDetails.getUsername());
+            jwtResponse.setUsername(user.getUsername()); // <= ici : renvoie le nom stocké lors de l'inscription !
             jwtResponse.setRoles(roles);
 
             return ResponseEntity.ok(jwtResponse);
@@ -238,16 +242,25 @@ public class AuthController {
 //        List<UserProfileDTO> users = userService.getAllUserProfiles();
 //        return ResponseEntity.ok(users);
 //    }
+@GetMapping("/users")
+public ResponseEntity<?> getFilteredUsers(
+        @RequestParam(defaultValue = "") String search,
+        @RequestParam(defaultValue = "all") String role,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
 
-    @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserProfileDTO>> getAllUsers(
-            @RequestParam(required = false) String q,
-            @RequestParam(required = false) String role
-    ) {
-        List<UserProfileDTO> users = userService.getFilteredUsers(q, role);
-        return ResponseEntity.ok(users);
-    }
+    Pageable pageable = PageRequest.of(page, size);
+    Page<UserProfileDTO> userPage = userService.getFilteredUsers(search, role, pageable);
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("users", userPage.getContent());
+    response.put("currentPage", userPage.getNumber());
+    response.put("totalItems", userPage.getTotalElements());
+    response.put("totalPages", userPage.getTotalPages());
+
+    return ResponseEntity.ok(response);
+}
+
 
 
 }

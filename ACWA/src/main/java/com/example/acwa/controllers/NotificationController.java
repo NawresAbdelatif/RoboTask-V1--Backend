@@ -18,33 +18,34 @@ public class NotificationController {
 
     @GetMapping
     public List<Notification> getMyNotifications(Authentication auth) {
-        String username = auth.getName();
-        return notificationService.getUserNotifications(username);
+        String email = auth.getName();
+        return notificationService.getUserNotifications(email);
     }
 
     @GetMapping("/unread-count")
     public Map<String, Long> getUnreadCount(Authentication auth) {
-        String username = auth.getName();
-        long count = notificationService.countUnread(username);
+        String email = auth.getName();
+        long count = notificationService.countUnread(email);
         return Map.of("unreadCount", count);
     }
 
     @GetMapping("/unread")
     public List<Notification> getMyUnreadNotifications(Authentication auth) {
-        String username = auth.getName();
-        return notificationService.getUnreadNotifications(username);
+        String email = auth.getName();
+        return notificationService.getUnreadNotifications(email);
     }
 
     @PostMapping("/clear")
     public void clearAll(Authentication auth) {
-        String username = auth.getName();
-        notificationService.markAllAsRead(username);
+        String email = auth.getName();
+        notificationService.deleteAllForUser(email);
     }
+
 
     @PostMapping("/mark-all-read")
     public void markAllRead(Authentication auth) {
-        String username = auth.getName();
-        notificationService.markAllAsRead(username);
+        String email = auth.getName();
+        notificationService.markAllAsRead(email);
     }
 
 }

@@ -252,33 +252,45 @@ public class UserService {
     }
 
 
-    public List<UserProfileDTO> getFilteredUsers(String query, String role) {
-        return userRepository.findAll().stream()
-                .filter(user -> {
-                    boolean matchesQuery = (query == null || query.isBlank()) ||
-                            user.getUsername().toLowerCase().contains(query.toLowerCase()) ||
-                            user.getEmail().toLowerCase().contains(query.toLowerCase());
+    public Page<UserProfileDTO> getFilteredUsers(String query, String role, Pageable pageable) {
+        Page<User> userPage;
 
-                    boolean matchesRole = (role == null || role.equalsIgnoreCase("all")) ||
-                            user.getRoles().stream()
-                                    .anyMatch(r -> r.getName().name().equalsIgnoreCase(role));
+        boolean hasQuery = query != null && !query.isBlank();
+        boolean hasRole = role != null && !role.equalsIgnoreCase("all");
 
-                    return matchesQuery && matchesRole;
-                })
-                .map(user -> {
-                    UserProfileDTO dto = new UserProfileDTO();
-                    dto.setId(user.getId());
-                    dto.setUsername(user.getUsername());
-                    dto.setEmail(user.getEmail());
-                    dto.setRoles(user.getRoles().stream()
-                            .map(r -> r.getName().name())
-                            .collect(Collectors.toSet()));
-                    dto.setEnabled(user.isEnabled());
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        RoleName roleName = null;
+        if (hasRole) {
+            try {
+                roleName = RoleName.valueOf(role); // conversion sécurisée
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Rôle invalide : " + role);
+            }
+        }
+
+        if (hasQuery && hasRole) {
+            userPage = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseAndRoles_Name(
+                    query, query, roleName, pageable);
+        } else if (hasQuery) {
+            userPage = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+                    query, query, pageable);
+        } else if (hasRole) {
+            userPage = userRepository.findByRoles_Name(roleName, pageable);
+        } else {
+            userPage = userRepository.findAll(pageable);
+        }
+
+        return userPage.map(user -> {
+            UserProfileDTO dto = new UserProfileDTO();
+            dto.setId(user.getId());
+            dto.setUsername(user.getUsername());
+            dto.setEmail(user.getEmail());
+            dto.setRoles(user.getRoles().stream()
+                    .map(r -> r.getName().name())
+                    .collect(Collectors.toSet()));
+            dto.setEnabled(user.isEnabled());
+            return dto;
+        });
     }
-
 
 }
 
