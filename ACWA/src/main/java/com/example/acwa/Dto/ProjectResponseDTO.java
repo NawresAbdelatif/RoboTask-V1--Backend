@@ -15,7 +15,9 @@ public class ProjectResponseDTO {
     private String creatorUsername;
     private Set<String> collaboratorsUsernames;
     private boolean archived;
-
+    private Set<CollaboratorDTO> collaborators;
+    public Set<CollaboratorDTO> getCollaborators() { return collaborators; }
+    public void setCollaborators(Set<CollaboratorDTO> collaborators) { this.collaborators = collaborators; }
 
 
     // Getters & Setters

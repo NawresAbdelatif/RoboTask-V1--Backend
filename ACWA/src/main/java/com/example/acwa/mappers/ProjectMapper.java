@@ -3,8 +3,8 @@ package com.example.acwa.mappers;
 import com.example.acwa.Dto.ProjectRequestDTO;
 import com.example.acwa.Dto.ProjectResponseDTO;
 import com.example.acwa.entities.Project;
-
 import java.util.stream.Collectors;
+import com.example.acwa.Dto.CollaboratorDTO;
 
 public class ProjectMapper {
 
@@ -31,6 +31,11 @@ public class ProjectMapper {
         dto.setCollaboratorsUsernames(
                 project.getCollaborators().stream()
                         .map(user -> user.getUsername())
+                        .collect(Collectors.toSet())
+        );
+        dto.setCollaborators(
+                project.getCollaborators().stream()
+                        .map(user -> new CollaboratorDTO(user.getUsername(), user.getEmail()))
                         .collect(Collectors.toSet())
         );
         dto.setArchived(project.isArchived());

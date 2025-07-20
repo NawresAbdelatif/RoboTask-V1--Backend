@@ -92,6 +92,37 @@ public class ProjectService {
         evictProjectCache(project);
     }
 
+    @Transactional
+    public void removeCollaborator(Long projectId, String currentEmail, String collaboratorEmail) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        User collaborator = userRepository.findByEmail(collaboratorEmail)
+                .orElseThrow(() -> new RuntimeException("Collaborateur non trouvé"));
+
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Utilisateur courant introuvable"));
+
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+        boolean isCreator = project.getCreator().getEmail().equals(currentEmail);
+
+        if (!isAdmin && !isCreator) {
+            throw new RuntimeException("Seul l'administrateur ou le créateur du projet peut retirer des collaborateurs !");
+        }
+
+        boolean removed = project.getCollaborators().remove(collaborator);
+        if (removed) {
+            projectRepository.save(project);
+            notificationService.createNotification(
+                    "Vous avez été retiré du projet : " + project.getName(),
+                    collaborator
+            );
+            evictProjectCache(project);
+        } else {
+            throw new RuntimeException("Collaborateur non trouvé dans ce projet !");
+        }
+    }
+
 
 
 //    public List<Project> getProjectsForUser(User user) {

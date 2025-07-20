@@ -61,11 +61,29 @@ public class ProjectController {
         String currentEmail = authentication.getName();
         try {
             projectService.addCollaborator(projectId, currentEmail, collaboratorUsername);
-            return ResponseEntity.ok("Collaborateur ajouté !");
+            return ResponseEntity.ok(Map.of("message", "Collaborateur ajouté !"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+
+    @PostMapping("/{projectId}/remove-collaborator")
+    public ResponseEntity<?> removeCollaborator(
+            @PathVariable Long projectId,
+            @RequestParam String collaboratorEmail,
+            Authentication authentication
+    ) {
+        String currentEmail = authentication.getName();
+        try {
+            projectService.removeCollaborator(projectId, currentEmail, collaboratorEmail);
+            // NEW: always return a JSON object!
+            return ResponseEntity.ok(Map.of("message", "Collaborateur retiré !"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
 
     @GetMapping("/operators")
     @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
@@ -189,6 +207,7 @@ public class ProjectController {
 
         return ResponseEntity.ok(response);
     }
+
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
     @GetMapping("/{id}")
