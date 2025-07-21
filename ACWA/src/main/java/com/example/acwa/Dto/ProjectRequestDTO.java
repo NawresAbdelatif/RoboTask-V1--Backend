@@ -5,6 +5,8 @@ import com.example.acwa.entities.ProjectStatus;
 import java.time.LocalDate;
 
 public class ProjectRequestDTO {
+
+    private String reference;
     private String name;
     private String description;
     private ProjectStatus status;
@@ -13,7 +15,11 @@ public class ProjectRequestDTO {
     private boolean archived;
 
 
+
     // Getters & Setters
+
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
     public String getName() {
         return name;
     }

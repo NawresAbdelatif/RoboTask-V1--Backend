@@ -17,6 +17,9 @@ public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = true, unique = true)
+    private String reference;
+
 
     private String name;
     private String description;
@@ -53,6 +56,8 @@ public class Project {
     public void setId(Long id) {
         this.id = id;
     }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
     public String getName() {
         return name;
     }

@@ -70,6 +70,7 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
             Pageable pageable
     );
 
+    boolean existsByReference(String reference);
 
 }
 

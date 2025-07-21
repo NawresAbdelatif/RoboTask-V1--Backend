@@ -60,7 +60,9 @@ public class ProjectService {
         if (!isAllowed) {
             throw new RuntimeException("Unauthorized: Only ADMIN or OPERATOR can create a project");
         }
-
+        if (projectRepository.existsByReference(project.getReference())) {
+            throw new RuntimeException("La référence existe déjà !");
+        }
         project.setCreator(user);
         return projectRepository.save(project);
     }
@@ -234,7 +236,11 @@ public class ProjectService {
         if (!isAdmin && !project.getCreator().getEmail().equals(email)) {
             throw new RuntimeException("Vous n'avez pas le droit de modifier ce projet !");
         }
-
+        if (!project.getReference().equals(dto.getReference()) &&
+                projectRepository.existsByReference(dto.getReference())) {
+            throw new RuntimeException("La référence existe déjà !");
+        }
+        project.setReference(dto.getReference());
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());

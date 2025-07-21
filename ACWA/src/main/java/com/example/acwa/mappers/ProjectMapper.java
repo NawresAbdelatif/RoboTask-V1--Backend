@@ -10,6 +10,7 @@ public class ProjectMapper {
 
     public static Project toEntity(ProjectRequestDTO dto) {
         Project project = new Project();
+        project.setReference(dto.getReference());
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());
@@ -21,6 +22,7 @@ public class ProjectMapper {
 
     public static ProjectResponseDTO toDTO(Project project) {
         ProjectResponseDTO dto = new ProjectResponseDTO();
+        dto.setReference(project.getReference());
         dto.setId(project.getId());
         dto.setName(project.getName());
         dto.setDescription(project.getDescription());
