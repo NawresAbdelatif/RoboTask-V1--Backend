@@ -104,6 +104,7 @@ public class ProjectController {
                 .filter(u ->
                         (u.getRoles().stream().anyMatch(r ->
                                 r.getName() == RoleName.ROLE_CREATOR || r.getName() == RoleName.ROLE_ADMIN)) &&
+                                (!u.getRoles().stream().anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN)) &&
                                 (
                                         u.getUsername().toLowerCase().contains(q.toLowerCase()) ||
                                                 u.getEmail().toLowerCase().contains(q.toLowerCase())

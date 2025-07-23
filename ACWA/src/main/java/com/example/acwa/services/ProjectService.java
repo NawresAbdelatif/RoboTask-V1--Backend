@@ -77,6 +77,13 @@ public class ProjectService {
         User currentUser = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur courant introuvable"));
 
+        boolean isCollaboratorAdmin = collaborator.getRoles().stream()
+                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+        if (isCollaboratorAdmin) {
+            throw new RuntimeException("Impossible d'ajouter un administrateur comme collaborateur !");
+        }
+
         boolean isAdmin = currentUser.getRoles().stream()
                 .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
         boolean isCreator = project.getCreator().getEmail().equals(currentEmail);

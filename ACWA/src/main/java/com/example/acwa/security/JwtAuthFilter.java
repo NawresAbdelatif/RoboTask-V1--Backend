@@ -28,7 +28,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/api/auth/register",
             "/api/auth/verify",
             "/api/auth/forgot-password",
-            "/api/auth/reset-password"
+            "/api/auth/reset-password",
+            "/swagger-ui/",
+            "/swagger-ui.html",
+            "/swagger-ui/index.html",
+            "/swagger-ui/**",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/webjars/**"
     );
 
     @Override
