@@ -402,6 +402,8 @@ public class ProjectService {
         project.setArchived(false);
         projectRepository.save(project);
     }
-
+    public long countActiveProjects() {
+        return projectRepository.countByArchivedFalse();
+    }
 }
 

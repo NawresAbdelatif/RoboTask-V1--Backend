@@ -100,4 +100,14 @@ public class PieceService {
                 search, search, pageable
         );
     }
+
+    public long getTotalPieces() {
+        return pieceRepository.count();
+    }
+
+    public Integer getTotalQuantite() {
+        Integer sum = pieceRepository.sumQuantite();
+        return sum != null ? sum : 0;
+    }
+
 }

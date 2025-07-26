@@ -107,4 +107,12 @@ public class OutilService {
                 search, search, pageable
         );
     }
+    public Integer getTotalQuantite() {
+        Integer sum = outilRepository.sumQuantite();
+        return sum != null ? sum : 0;
+    }
+
+    public long getTotalOutils() {
+        return outilRepository.count();
+    }
 }

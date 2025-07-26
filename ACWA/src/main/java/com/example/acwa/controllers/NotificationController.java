@@ -45,7 +45,9 @@ public class NotificationController {
     @PostMapping("/mark-all-read")
     public void markAllRead(Authentication auth) {
         String email = auth.getName();
+        System.out.println("CALL markAllRead for: " + email);
         notificationService.markAllAsRead(email);
     }
+
 
 }

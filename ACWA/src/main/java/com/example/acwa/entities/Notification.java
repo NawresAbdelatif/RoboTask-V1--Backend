@@ -13,7 +13,9 @@ public class Notification {
 
     private String message;
 
-    private boolean read;    private String type;
+
+    private boolean read;
+    private String type;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

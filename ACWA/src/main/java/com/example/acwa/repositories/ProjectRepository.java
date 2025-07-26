@@ -72,6 +72,8 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
 
     boolean existsByReference(String reference);
 
+    long countByArchivedFalse();
+
 }
 
 

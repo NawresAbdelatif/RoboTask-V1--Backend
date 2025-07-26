@@ -260,6 +260,11 @@ public ResponseEntity<?> getFilteredUsers(
 
     return ResponseEntity.ok(response);
 }
+    @GetMapping("/users/count-enabled")
+    public ResponseEntity<Long> countEnabledUsers() {
+        long count = userService.countEnabledUsers();
+        return ResponseEntity.ok(count);
+    }
 
 
 

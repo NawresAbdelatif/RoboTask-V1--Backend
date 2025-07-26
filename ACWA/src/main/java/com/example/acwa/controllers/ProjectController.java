@@ -286,5 +286,9 @@ public class ProjectController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }@GetMapping("/stats/active-count")
+    public ResponseEntity<Long> getActiveProjectsCount() {
+        long count = projectService.countActiveProjects();
+        return ResponseEntity.ok(count);
     }
 }

@@ -5,6 +5,7 @@ import com.example.acwa.entities.Piece;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,4 +15,7 @@ public interface OutilRepository extends JpaRepository<Outil, Long> {
     Page<Outil> findByReferenceIgnoreCaseContainingOrDesignationIgnoreCaseContaining(
             String reference, String designation, Pageable pageable
     );
+
+    @Query("SELECT SUM(o.quantite) FROM Outil o")
+    Integer sumQuantite();
 }

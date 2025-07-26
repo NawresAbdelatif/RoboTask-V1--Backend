@@ -54,7 +54,7 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setEnabled(false); // Désactive le compte jusqu'à validation
+        user.setEnabled(false);
 
         Set<Role> userRoles = new HashSet<>();
 
@@ -290,6 +290,9 @@ public class UserService {
             dto.setEnabled(user.isEnabled());
             return dto;
         });
+    }
+    public long countEnabledUsers() {
+        return userRepository.countByEnabled(true);
     }
 
 }

@@ -110,4 +110,15 @@ public class PieceController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getTotalPieces() {
+        long count = pieceService.getTotalPieces();
+        return ResponseEntity.ok(count);
+    }
+    @GetMapping("/quantite-total")
+    public ResponseEntity<Integer> getTotalQuantite() {
+        return ResponseEntity.ok(pieceService.getTotalQuantite());
+    }
+
 }

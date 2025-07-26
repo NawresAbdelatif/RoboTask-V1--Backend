@@ -39,7 +39,6 @@ public class OutilController {
         }
     }
 
-
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
@@ -104,5 +103,15 @@ public class OutilController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/quantite-total")
+    public ResponseEntity<Integer> getTotalQuantite() {
+        return ResponseEntity.ok(outilService.getTotalQuantite());
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getTotalOutils() {
+        return ResponseEntity.ok(outilService.getTotalOutils());
     }
 }

@@ -46,7 +46,8 @@ public class Project {
     @Column(nullable = false)
     private boolean archived = false;
 
-
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Assemblage> assemblages = new HashSet<>();
 
     // ----- Getters and setters -----
 
@@ -100,8 +101,8 @@ public class Project {
     public void setCollaborators(Set<User> collaborators) {
         this.collaborators = collaborators;
     }
-
     public boolean isArchived() { return archived; }
     public void setArchived(boolean archived) { this.archived = archived; }
-
+    public Set<Assemblage> getAssemblages() { return assemblages; }
+    public void setAssemblages(Set<Assemblage> assemblages) { this.assemblages = assemblages; }
 }
