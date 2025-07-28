@@ -84,12 +84,19 @@ public class ProjectService {
             throw new RuntimeException("Impossible d'ajouter un administrateur comme collaborateur !");
         }
 
-        boolean isAdmin = currentUser.getRoles().stream()
-                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
         boolean isCreator = project.getCreator().getEmail().equals(currentEmail);
+        boolean isProjectCollaborator = project.getCollaborators().stream()
+                .anyMatch(u -> u.getEmail().equals(currentEmail) &&
+                        u.getRoles().stream().anyMatch(r -> r.getName() == RoleName.ROLE_CREATOR));
 
-        if (!isAdmin && !isCreator) {
-            throw new RuntimeException("Seul l'administrateur ou le créateur du projet peut ajouter des collaborateurs !");
+        if (!isAdmin && !isCreator && !isProjectCollaborator) {
+            throw new RuntimeException("Seul l'admin, le créateur du projet ou un collaborateur avec le rôle CREATOR peut ajouter des collaborateurs !");
+        }
+
+        // (Évite les doublons éventuels)
+        if (project.getCollaborators().contains(collaborator)) {
+            throw new RuntimeException("Cet utilisateur est déjà collaborateur !");
         }
 
         project.getCollaborators().add(collaborator);
@@ -114,9 +121,12 @@ public class ProjectService {
 
         boolean isAdmin = currentUser.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
         boolean isCreator = project.getCreator().getEmail().equals(currentEmail);
+        boolean isProjectCollaborator = project.getCollaborators().stream()
+                .anyMatch(u -> u.getEmail().equals(currentEmail) &&
+                        u.getRoles().stream().anyMatch(r -> r.getName() == RoleName.ROLE_CREATOR));
 
-        if (!isAdmin && !isCreator) {
-            throw new RuntimeException("Seul l'administrateur ou le créateur du projet peut retirer des collaborateurs !");
+        if (!isAdmin && !isCreator && !isProjectCollaborator) {
+            throw new RuntimeException("Seul l'admin, le créateur du projet ou un collaborateur avec le rôle CREATOR peut retirer des collaborateurs !");
         }
 
         boolean removed = project.getCollaborators().remove(collaborator);

@@ -37,10 +37,17 @@ public class ProjectMapper {
         );
         dto.setCollaborators(
                 project.getCollaborators().stream()
-                        .map(user -> new CollaboratorDTO(user.getUsername(), user.getEmail()))
+                        .map(user -> new CollaboratorDTO(
+                                user.getUsername(),
+                                user.getEmail(),
+                                user.getRoles().stream()
+                                        .map(r -> r.getName().name())
+                                        .collect(Collectors.toSet())
+                        ))
                         .collect(Collectors.toSet())
         );
         dto.setArchived(project.isArchived());
         return dto;
     }
+
 }

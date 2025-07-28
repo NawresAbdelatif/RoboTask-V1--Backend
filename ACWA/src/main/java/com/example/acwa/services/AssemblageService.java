@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AssemblageService {
@@ -58,6 +59,9 @@ public class AssemblageService {
 //                    .orElseThrow(() -> new RuntimeException("Parent non trouvé"));
 //            assemblage.setParent(parent);
 //        }
+
+        int maxOrdre = assemblageRepository.findMaxOrdreByProjectId(projectId).orElse(0);
+        assemblage.setOrdre(maxOrdre + 1);
 
         return assemblageRepository.save(assemblage);
     }
@@ -121,4 +125,31 @@ public class AssemblageService {
         return assemblageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
     }
+
+    @Transactional
+    public void reorderAssemblages(Long projectId, List<Long> orderedIds, String email) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(
+                r -> r.getName().name().equals("ROLE_ADMIN")
+        );
+        boolean isCreatorOrCollaborator =
+                user.equals(project.getCreator()) || project.getCollaborators().contains(user);
+
+        if (!(isAdmin || isCreatorOrCollaborator)) {
+            throw new RuntimeException("Non autorisé !");
+        }
+
+        for (int i = 0; i < orderedIds.size(); i++) {
+            final Long id = orderedIds.get(i); // <--- variable effectively final
+            Assemblage assemblage = assemblageRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Assemblage non trouvé: " + id));
+            assemblage.setOrdre(i);
+        }
+        assemblageRepository.flush();
+    }
+
 }

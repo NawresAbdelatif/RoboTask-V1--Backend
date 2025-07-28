@@ -266,6 +266,4 @@ public ResponseEntity<?> getFilteredUsers(
         return ResponseEntity.ok(count);
     }
 
-
-
 }

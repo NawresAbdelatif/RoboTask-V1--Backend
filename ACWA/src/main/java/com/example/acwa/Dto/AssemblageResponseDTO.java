@@ -9,6 +9,7 @@ public class AssemblageResponseDTO {
     private String description;
     private LocalDateTime dateCreation;
     private String creatorUsername;
+    private Long parentId;
     private List<AssemblageResponseDTO> sousAssemblages;
 
     // --- Getters & Setters ---
@@ -22,6 +23,8 @@ public class AssemblageResponseDTO {
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public String getCreatorUsername() { return creatorUsername; }
     public void setCreatorUsername(String creatorUsername) { this.creatorUsername = creatorUsername; }
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
     public List<AssemblageResponseDTO> getSousAssemblages() { return sousAssemblages; }
     public void setSousAssemblages(List<AssemblageResponseDTO> sousAssemblages) { this.sousAssemblages = sousAssemblages; }
 }

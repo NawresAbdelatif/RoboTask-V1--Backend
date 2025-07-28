@@ -7,10 +7,12 @@ import com.example.acwa.entities.Assemblage;
 import com.example.acwa.mappers.AssemblageMapper;
 import com.example.acwa.services.AssemblageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,7 +44,7 @@ public class AssemblageController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("ordre").ascending());
         Page<Assemblage> assemblages = assemblageService.getAssemblagesForProject(projectId, search, pageable);
 
         List<AssemblageResponseDTO> dtos = assemblages.getContent().stream()
@@ -57,6 +59,7 @@ public class AssemblageController {
         );
         return ResponseEntity.ok(result);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<AssemblageResponseDTO> get(@PathVariable Long id) {
@@ -82,6 +85,20 @@ public class AssemblageController {
         assemblageService.deleteAssemblage(id, email);
         return ResponseEntity.ok().build();
     }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    @PutMapping("/reorder")
+    @CacheEvict(value = "assemblages", allEntries = true)
+    public ResponseEntity<?> reorderAssemblages(
+            @PathVariable Long projectId,
+            @RequestBody List<Long> orderedIds,
+            Authentication auth
+    ) {
+        assemblageService.reorderAssemblages(projectId, orderedIds, auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
 }
 
 

@@ -44,8 +44,6 @@ public class UserService {
     private JavaMailSender mailSender;
 
     public void registerUser(SignupRequest request) {
-
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already used");
         }
@@ -56,34 +54,24 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEnabled(false);
 
+        // Toujours ROLE_VISITOR par défaut, on ignore le champ roles du front
+        Role defaultRole = roleRepository.findByName(RoleName.ROLE_VISITOR)
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
         Set<Role> userRoles = new HashSet<>();
-
-        if (request.getRoles() == null || request.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findByName(RoleName.ROLE_VISITOR)
-                    .orElseThrow(() -> new RuntimeException("Default role not found"));
-            userRoles.add(defaultRole);
-        } else {
-            for (String roleStr : request.getRoles()) {
-                RoleName roleName = RoleName.valueOf("ROLE_" + roleStr.toUpperCase());
-                Role role = roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found"));
-                userRoles.add(role);
-            }
-        }
-
+        userRoles.add(defaultRole);
         user.setRoles(userRoles);
         userRepository.save(user);
 
-        // --- Génère un token de vérification ---
+        // Token de validation par mail (identique à avant)
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(token);
         verificationToken.setUser(user);
-        verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24)); // valable 24h
+        verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
         verificationTokenRepository.save(verificationToken);
 
-        // --- Prépare et envoie le mail de vérification ---
-        String url = "http://localhost:4200/activate?token=" + token;        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        String url = "http://localhost:4200/activate?token=" + token;
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Vérification de votre email");
         mailMessage.setText(
@@ -96,11 +84,11 @@ public class UserService {
         mailSender.send(mailMessage);
     }
 
+
     public void generatePasswordResetToken(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Aucun utilisateur"));
 
-        // Supprimer l'ancien token de ce user s'il existe
         verificationTokenRepository.deleteAllByUserId(user.getId());
 
         String token = UUID.randomUUID().toString();
@@ -109,7 +97,6 @@ public class UserService {
 
         String url = "http://localhost:4200/pages/reset-password?token=" + token;
 
-        // Préparer et envoyer le mail ici !
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Réinitialisation de votre mot de passe");
@@ -180,7 +167,6 @@ public class UserService {
     public UserProfileDTO updateUserProfile(String username, UserProfileUpdateDTO updateDTO) {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-        // Si l'email change, vérifie qu'il n'est pas déjà utilisé par un autre user
         if (!user.getEmail().equals(updateDTO.getEmail()) && userRepository.existsByEmail(updateDTO.getEmail())) {
             throw new RuntimeException("Cet email est déjà utilisé");
         }

@@ -2,6 +2,8 @@ package com.example.acwa.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -17,6 +19,9 @@ public class Assemblage {
     @Column(length = 1500)
     private String description;
 
+    @Column(name = "ordre")
+    private Integer ordre;
+
     private LocalDateTime dateCreation;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,12 +32,12 @@ public class Assemblage {
     @JoinColumn(name = "project_id")
     private Project project;
 
-//    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<Assemblage> sousAssemblages = new HashSet<>();
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Assemblage> sousAssemblages = new HashSet<>();
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "parent_id")
-//    private Assemblage parent;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Assemblage parent;
 
     // --- Getters & Setters ---
 
@@ -45,6 +50,10 @@ public class Assemblage {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public Integer getOrdre() { return ordre; }
+    public void setOrdre(Integer ordre) { this.ordre = ordre; }
+
+
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
@@ -54,9 +63,10 @@ public class Assemblage {
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
 
-//    public Set<Assemblage> getSousAssemblages() { return sousAssemblages; }
-//    public void setSousAssemblages(Set<Assemblage> sousAssemblages) { this.sousAssemblages = sousAssemblages; }
-//
-//    public Assemblage getParent() { return parent; }
-//    public void setParent(Assemblage parent) { this.parent = parent; }
+    public Set<Assemblage> getSousAssemblages() { return sousAssemblages; }
+    public void setSousAssemblages(Set<Assemblage> sousAssemblages) { this.sousAssemblages = sousAssemblages; }
+
+    public Assemblage getParent() { return parent; }
+    public void setParent(Assemblage parent) { this.parent = parent; }
+
 }

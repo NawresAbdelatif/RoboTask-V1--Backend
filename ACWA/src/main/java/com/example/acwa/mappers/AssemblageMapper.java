@@ -7,6 +7,7 @@ import com.example.acwa.entities.Assemblage;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 public class AssemblageMapper {
     public static AssemblageResponseDTO toDTO(Assemblage entity) {
         AssemblageResponseDTO dto = new AssemblageResponseDTO();
@@ -15,21 +16,22 @@ public class AssemblageMapper {
         dto.setDescription(entity.getDescription());
         dto.setDateCreation(entity.getDateCreation());
         dto.setCreatorUsername(entity.getCreator() != null ? entity.getCreator().getUsername() : null);
+        dto.setParentId(entity.getParent() != null ? entity.getParent().getId() : null);
 
-//        // Mapper récursif les sous-assemblages directs
-//        if (entity.getSousAssemblages() != null) {
-//            List<AssemblageResponseDTO> sousDtos = entity.getSousAssemblages().stream()
-//                    .map(AssemblageMapper::toDTO)
-//                    .collect(Collectors.toList());
-//            dto.setSousAssemblages(sousDtos);
-//        }
+        if (entity.getSousAssemblages() != null && !entity.getSousAssemblages().isEmpty()) {
+            List<AssemblageResponseDTO> sousDtos = entity.getSousAssemblages().stream()
+                    .map(AssemblageMapper::toDTO)
+                    .collect(Collectors.toList());
+            dto.setSousAssemblages(sousDtos);
+        }
         return dto;
     }
 
-    public static Assemblage toEntity(AssemblageRequestDTO dto) {
+    public static Assemblage toEntity(AssemblageRequestDTO dto, Assemblage parent) {
         Assemblage entity = new Assemblage();
         entity.setNom(dto.getNom());
         entity.setDescription(dto.getDescription());
+        entity.setParent(parent);
         return entity;
     }
 }
