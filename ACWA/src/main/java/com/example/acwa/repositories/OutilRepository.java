@@ -18,4 +18,5 @@ public interface OutilRepository extends JpaRepository<Outil, Long> {
 
     @Query("SELECT SUM(o.quantite) FROM Outil o")
     Integer sumQuantite();
+
 }
