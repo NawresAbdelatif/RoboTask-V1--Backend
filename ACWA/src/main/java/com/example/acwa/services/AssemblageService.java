@@ -27,7 +27,6 @@ public class AssemblageService {
 
     @Autowired
     private UserRepository userRepository;
-
     @Transactional
     @CacheEvict(value = "assemblages", allEntries = true)
     public Assemblage createAssemblage(Long projectId, AssemblageRequestDTO dto, String email) {
@@ -49,16 +48,18 @@ public class AssemblageService {
         Assemblage assemblage = new Assemblage();
         assemblage.setNom(dto.getNom());
         assemblage.setDescription(dto.getDescription());
+        assemblage.setReference(dto.getReference());
+        assemblage.setStatut(dto.getStatut() != null ? dto.getStatut() : AssemblageStatut.BROUILLON);
         assemblage.setDateCreation(LocalDateTime.now());
         assemblage.setCreator(user);
         assemblage.setProject(project);
-//
-//        // Gestion du parent (sous-assemblage)
-//        if (dto.getParentId() != null) {
-//            Assemblage parent = assemblageRepository.findById(dto.getParentId())
-//                    .orElseThrow(() -> new RuntimeException("Parent non trouvé"));
-//            assemblage.setParent(parent);
-//        }
+
+        // Gestion du parent (sous-assemblage)
+        if (dto.getParentId() != null) {
+            Assemblage parent = assemblageRepository.findById(dto.getParentId())
+                    .orElseThrow(() -> new RuntimeException("Parent non trouvé"));
+            assemblage.setParent(parent);
+        }
 
         int maxOrdre = assemblageRepository.findMaxOrdreByProjectId(projectId).orElse(0);
         assemblage.setOrdre(maxOrdre + 1);
@@ -66,18 +67,35 @@ public class AssemblageService {
         return assemblageRepository.save(assemblage);
     }
 
+
     @Transactional(readOnly = true)
     @Cacheable(value = "assemblages")
-    public Page<Assemblage> getAssemblagesForProject(Long projectId, String nom, Pageable pageable) {
+    public Page<Assemblage> getAssemblagesForProject(Long projectId, String nom, String statut, Pageable pageable) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
-        if (nom != null && !nom.isEmpty()) {
-            return assemblageRepository.findByProjectAndNomContainingIgnoreCase(project, nom, pageable);
+        if (statut != null && !statut.isEmpty()) {
+            AssemblageStatut statutEnum;
+            try {
+                statutEnum = AssemblageStatut.valueOf(statut);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Statut invalide: " + statut);
+            }
+            if (nom != null && !nom.isEmpty()) {
+                return assemblageRepository.findByProjectAndNomContainingIgnoreCaseAndStatut(project, nom, statutEnum, pageable);
+            } else {
+                return assemblageRepository.findByProjectAndStatut(project, statutEnum, pageable);
+            }
         } else {
-            return assemblageRepository.findByProject(project, pageable);
+            if (nom != null && !nom.isEmpty()) {
+                return assemblageRepository.findByProjectAndNomContainingIgnoreCase(project, nom, pageable);
+            } else {
+                return assemblageRepository.findByProject(project, pageable);
+            }
         }
     }
-    @Transactional
+
+
+        @Transactional
     @CacheEvict(value = "assemblages", allEntries = true)
     public void deleteAssemblage(Long id, String email) {
         Assemblage assemblage = assemblageRepository.findById(id)
@@ -116,8 +134,12 @@ public class AssemblageService {
 
         assemblage.setNom(dto.getNom());
         assemblage.setDescription(dto.getDescription());
+        assemblage.setReference(dto.getReference());
+        assemblage.setStatut(dto.getStatut() != null ? dto.getStatut() : AssemblageStatut.BROUILLON);
+
         return assemblageRepository.save(assemblage);
     }
+
 
 
     @Transactional(readOnly = true)

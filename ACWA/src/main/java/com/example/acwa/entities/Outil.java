@@ -12,7 +12,7 @@ public class Outil {
     private String reference;
     private String designation;
     private String specification;
-    private int quantite;
+//    private int quantite;
     private String imageUrl;
     private String description;
 
@@ -23,7 +23,7 @@ public class Outil {
         this.reference = reference;
         this.designation = designation;
         this.specification = specification;
-        this.quantite = quantite;
+//        this.quantite = quantite;
         this.imageUrl = imageUrl;
         this.description = description;
     }
@@ -41,8 +41,8 @@ public class Outil {
     public String getSpecification() { return specification; }
     public void setSpecification(String specification) { this.specification = specification; }
 
-    public int getQuantite() { return quantite; }
-    public void setQuantite(int quantite) { this.quantite = quantite; }
+//    public int getQuantite() { return quantite; }
+//    public void setQuantite(int quantite) { this.quantite = quantite; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }

@@ -15,7 +15,7 @@ public interface OutilRepository extends JpaRepository<Outil, Long> {
             String reference, String designation, Pageable pageable
     );
 
-    @Query("SELECT SUM(o.quantite) FROM Outil o")
-    Integer sumQuantite();
+//    @Query("SELECT SUM(o.quantite) FROM Outil o")
+//    Integer sumQuantite();
 
 }

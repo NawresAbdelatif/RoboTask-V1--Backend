@@ -11,7 +11,7 @@ public class ProjectRequestDTO {
     private String description;
     private ProjectStatus status;
     private LocalDate startDate;
-    private LocalDate endDate;
+//    private LocalDate endDate;
     private boolean archived;
 
 
@@ -52,13 +52,13 @@ public class ProjectRequestDTO {
         this.startDate = startDate;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
+//    public LocalDate getEndDate() {
+//        return endDate;
+//    }
+//
+//    public void setEndDate(LocalDate endDate) {
+//        this.endDate = endDate;
+//    }
 
 
     public boolean isArchived() { return archived; }

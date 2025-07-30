@@ -10,7 +10,7 @@ public class PieceMapper {
         Piece piece = new Piece();
         piece.setReference(dto.getReference());
         piece.setDesignation(dto.getDesignation());
-        piece.setQuantite(dto.getQuantite());
+//        piece.setQuantite(dto.getQuantite());
         piece.setImageUrl(dto.getImageUrl());
         piece.setObservation(dto.getObservation());
         return piece;
@@ -21,7 +21,7 @@ public class PieceMapper {
         dto.setId(entity.getId());
         dto.setReference(entity.getReference());
         dto.setDesignation(entity.getDesignation());
-        dto.setQuantite(entity.getQuantite());
+//        dto.setQuantite(entity.getQuantite());
         dto.setImageUrl(entity.getImageUrl());
         dto.setObservation(entity.getObservation());
         return dto;
@@ -30,7 +30,7 @@ public class PieceMapper {
     public static void updateEntity(Piece entity, PieceRequestDTO dto) {
         entity.setReference(dto.getReference());
         entity.setDesignation(dto.getDesignation());
-        entity.setQuantite(dto.getQuantite());
+//        entity.setQuantite(dto.getQuantite());
         entity.setImageUrl(dto.getImageUrl());
         entity.setObservation(dto.getObservation());
     }

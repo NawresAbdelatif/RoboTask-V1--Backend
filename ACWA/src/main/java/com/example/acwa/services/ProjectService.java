@@ -145,7 +145,7 @@ public class ProjectService {
 
 
 //    public List<Project> getProjectsForUser(User user) {
-//        // Si Admin : tout
+//        // Si Admin: tout
 //        boolean isAdmin = user.getRoles().stream()
 //                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
 //
@@ -262,7 +262,7 @@ public class ProjectService {
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());
         project.setStartDate(dto.getStartDate());
-        project.setEndDate(dto.getEndDate());
+//        project.setEndDate(dto.getEndDate());
         Project updatedProject = projectRepository.save(project);
 
         evictProjectCache(updatedProject);

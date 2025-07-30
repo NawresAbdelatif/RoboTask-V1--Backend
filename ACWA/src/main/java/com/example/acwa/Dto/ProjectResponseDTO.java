@@ -13,7 +13,7 @@ public class ProjectResponseDTO {
     private String description;
     private ProjectStatus status;
     private LocalDate startDate;
-    private LocalDate endDate;
+//    private LocalDate endDate;
     private String creatorUsername;
     private Set<String> collaboratorsUsernames;
     private boolean archived;
@@ -66,13 +66,13 @@ public class ProjectResponseDTO {
         this.startDate = startDate;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
+//    public LocalDate getEndDate() {
+//        return endDate;
+//    }
+//
+//    public void setEndDate(LocalDate endDate) {
+//        this.endDate = endDate;
+//    }
 
     public String getCreatorUsername() {
         return creatorUsername;

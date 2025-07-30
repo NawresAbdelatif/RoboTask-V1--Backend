@@ -28,7 +28,7 @@ public class Project {
     private ProjectStatus status;
 
     private LocalDate startDate;
-    private LocalDate endDate;
+//    private LocalDate endDate;
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
@@ -83,12 +83,12 @@ public class Project {
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
+//    public LocalDate getEndDate() {
+//        return endDate;
+//    }
+//    public void setEndDate(LocalDate endDate) {
+//        this.endDate = endDate;
+//    }
     public User getCreator() {
         return creator;
     }

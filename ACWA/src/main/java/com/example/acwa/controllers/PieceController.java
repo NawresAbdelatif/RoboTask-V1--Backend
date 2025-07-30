@@ -116,9 +116,9 @@ public class PieceController {
         long count = pieceService.getTotalPieces();
         return ResponseEntity.ok(count);
     }
-    @GetMapping("/quantite-total")
-    public ResponseEntity<Integer> getTotalQuantite() {
-        return ResponseEntity.ok(pieceService.getTotalQuantite());
-    }
+//    @GetMapping("/quantite-total")
+//    public ResponseEntity<Integer> getTotalQuantite() {
+//        return ResponseEntity.ok(pieceService.getTotalQuantite());
+//    }
 
 }

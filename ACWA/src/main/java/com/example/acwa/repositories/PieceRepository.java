@@ -13,7 +13,7 @@ public interface PieceRepository extends JpaRepository<Piece, Long> {
             String reference, String designation, Pageable pageable
     );
 
-    @Query("SELECT SUM(p.quantite) FROM Piece p")
-    Integer sumQuantite();
+//    @Query("SELECT SUM(p.quantite) FROM Piece p")
+//    Integer sumQuantite();
 }
 

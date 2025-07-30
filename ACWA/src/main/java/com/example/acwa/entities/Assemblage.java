@@ -13,6 +13,9 @@ public class Assemblage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String reference;
+
     @Column(nullable = false)
     private String nom;
 
@@ -28,6 +31,10 @@ public class Assemblage {
     @JoinColumn(name = "creator_id")
     private User creator;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AssemblageStatut statut = AssemblageStatut.BROUILLON;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
@@ -38,6 +45,8 @@ public class Assemblage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Assemblage parent;
+
+
 
     // --- Getters & Setters ---
 
@@ -68,5 +77,10 @@ public class Assemblage {
 
     public Assemblage getParent() { return parent; }
     public void setParent(Assemblage parent) { this.parent = parent; }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
+
+    public AssemblageStatut getStatut() { return statut; }
+    public void setStatut(AssemblageStatut statut) { this.statut = statut; }
 
 }

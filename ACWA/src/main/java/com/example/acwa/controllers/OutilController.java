@@ -105,10 +105,10 @@ public class OutilController {
         }
     }
 
-    @GetMapping("/quantite-total")
-    public ResponseEntity<Integer> getTotalQuantite() {
-        return ResponseEntity.ok(outilService.getTotalQuantite());
-    }
+//    @GetMapping("/quantite-total")
+//    public ResponseEntity<Integer> getTotalQuantite() {
+//        return ResponseEntity.ok(outilService.getTotalQuantite());
+//    }
 
     @GetMapping("/count")
     public ResponseEntity<Long> getTotalOutils() {

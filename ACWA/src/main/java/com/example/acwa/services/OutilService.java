@@ -63,7 +63,7 @@ public class OutilService {
         outil.setReference(dto.getReference());
         outil.setDesignation(dto.getDesignation());
         outil.setSpecification(dto.getSpecification());
-        outil.setQuantite(dto.getQuantite());
+//        outil.setQuantite(dto.getQuantite());
         outil.setImageUrl(dto.getImageUrl());
         outil.setDescription(dto.getDescription());
         return OutilMapper.toDTO(outilRepository.save(outil));
@@ -107,10 +107,10 @@ public class OutilService {
                 search, search, pageable
         );
     }
-    public Integer getTotalQuantite() {
-        Integer sum = outilRepository.sumQuantite();
-        return sum != null ? sum : 0;
-    }
+//    public Integer getTotalQuantite() {
+//        Integer sum = outilRepository.sumQuantite();
+//        return sum != null ? sum : 0;
+//    }
 
     public long getTotalOutils() {
         return outilRepository.count();

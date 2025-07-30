@@ -1,6 +1,7 @@
 package com.example.acwa.repositories;
 
 import com.example.acwa.entities.Assemblage;
+import com.example.acwa.entities.AssemblageStatut;
 import com.example.acwa.entities.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,4 +17,11 @@ public interface AssemblageRepository extends JpaRepository<Assemblage, Long> {
 
     @Query("SELECT MAX(a.ordre) FROM Assemblage a WHERE a.project.id = :projectId")
     Optional<Integer> findMaxOrdreByProjectId(@Param("projectId") Long projectId);
+
+    Page<Assemblage> findByProjectAndStatut(Project project, AssemblageStatut statut, Pageable pageable);
+
+    Page<Assemblage> findByProjectAndNomContainingIgnoreCaseAndStatut(
+            Project project, String nom, AssemblageStatut statut, Pageable pageable);
+
+
 }

@@ -56,7 +56,7 @@ public class PieceService {
         }
         piece.setReference(dto.getReference());
         piece.setDesignation(dto.getDesignation());
-        piece.setQuantite(dto.getQuantite());
+//        piece.setQuantite(dto.getQuantite());
         piece.setImageUrl(dto.getImageUrl());
         piece.setObservation(dto.getObservation());
         return PieceMapper.toDTO(pieceRepository.save(piece));
@@ -105,9 +105,9 @@ public class PieceService {
         return pieceRepository.count();
     }
 
-    public Integer getTotalQuantite() {
-        Integer sum = pieceRepository.sumQuantite();
-        return sum != null ? sum : 0;
-    }
+//    public Integer getTotalQuantite() {
+//        Integer sum = pieceRepository.sumQuantite();
+//        return sum != null ? sum : 0;
+//    }
 
 }

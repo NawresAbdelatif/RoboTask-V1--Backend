@@ -41,11 +41,12 @@ public class AssemblageController {
     public ResponseEntity<PageResult<AssemblageResponseDTO>> list(
             @PathVariable Long projectId,
             @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "") String statut,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("ordre").ascending());
-        Page<Assemblage> assemblages = assemblageService.getAssemblagesForProject(projectId, search, pageable);
+        Page<Assemblage> assemblages = assemblageService.getAssemblagesForProject(projectId, search, statut, pageable);
 
         List<AssemblageResponseDTO> dtos = assemblages.getContent().stream()
                 .map(AssemblageMapper::toDTO)

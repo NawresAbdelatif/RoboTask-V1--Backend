@@ -11,7 +11,7 @@ public class OutilMapper {
         outil.setReference(dto.getReference());
         outil.setDesignation(dto.getDesignation());
         outil.setSpecification(dto.getSpecification());
-        outil.setQuantite(dto.getQuantite());
+//        outil.setQuantite(dto.getQuantite());
         outil.setImageUrl(dto.getImageUrl());
         outil.setDescription(dto.getDescription());
         return outil;
@@ -23,7 +23,7 @@ public class OutilMapper {
         dto.setReference(entity.getReference());
         dto.setDesignation(entity.getDesignation());
         dto.setSpecification(entity.getSpecification());
-        dto.setQuantite(entity.getQuantite());
+//        dto.setQuantite(entity.getQuantite());
         dto.setImageUrl(entity.getImageUrl());
         dto.setDescription(entity.getDescription());
         return dto;

@@ -4,7 +4,7 @@ public class PieceRequestDTO {
 
     private String reference;
     private String designation;
-    private int quantite;
+//    private int quantite;
     private String imageUrl;
     private String observation;
 
@@ -26,13 +26,13 @@ public class PieceRequestDTO {
         this.designation = designation;
     }
 
-    public int getQuantite() {
-        return quantite;
-    }
-
-    public void setQuantite(int quantite) {
-        this.quantite = quantite;
-    }
+//    public int getQuantite() {
+//        return quantite;
+//    }
+//
+//    public void setQuantite(int quantite) {
+//        this.quantite = quantite;
+//    }
 
     public String getImageUrl() {
         return imageUrl;

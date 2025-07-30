@@ -11,6 +11,9 @@ public class AssemblageResponseDTO {
     private String creatorUsername;
     private Long parentId;
     private List<AssemblageResponseDTO> sousAssemblages;
+    private String reference;
+    private String statut;
+
 
     // --- Getters & Setters ---
     public Long getId() { return id; }
@@ -27,4 +30,8 @@ public class AssemblageResponseDTO {
     public void setParentId(Long parentId) { this.parentId = parentId; }
     public List<AssemblageResponseDTO> getSousAssemblages() { return sousAssemblages; }
     public void setSousAssemblages(List<AssemblageResponseDTO> sousAssemblages) { this.sousAssemblages = sousAssemblages; }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
 }
