@@ -27,6 +27,12 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "previous_status")
+    private ProjectStatus previousStatus; // <-- AJOUT
+
+
+
     private LocalDate startDate;
 //    private LocalDate endDate;
 
@@ -103,6 +109,12 @@ public class Project {
     }
     public boolean isArchived() { return archived; }
     public void setArchived(boolean archived) { this.archived = archived; }
+    public ProjectStatus getPreviousStatus() {
+        return previousStatus;
+    }
+    public void setPreviousStatus(ProjectStatus previousStatus) {
+        this.previousStatus = previousStatus;
+    }
     public Set<Assemblage> getAssemblages() { return assemblages; }
     public void setAssemblages(Set<Assemblage> assemblages) { this.assemblages = assemblages; }
 }

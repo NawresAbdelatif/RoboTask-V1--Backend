@@ -387,7 +387,13 @@ public class ProjectService {
             throw new RuntimeException("Vous n'avez pas le droit d'archiver ce projet !");
         }
 
+        // On mémorise le statut AVANT archivage, seulement si ce n’est pas déjà ARCHIVE
+        if (project.getStatus() != ProjectStatus.ARCHIVE) {
+            project.setPreviousStatus(project.getStatus());
+        }
         project.setArchived(true);
+        project.setStatus(ProjectStatus.ARCHIVE);
+
         projectRepository.save(project);
     }
 
@@ -410,8 +416,17 @@ public class ProjectService {
         }
 
         project.setArchived(false);
+        // On remet le statut précédent, ou BROUILLON si jamais null
+        if (project.getPreviousStatus() != null && project.getPreviousStatus() != ProjectStatus.ARCHIVE) {
+            project.setStatus(project.getPreviousStatus());
+        } else {
+            project.setStatus(ProjectStatus.BROUILLON);
+        }
+        project.setPreviousStatus(null);
+
         projectRepository.save(project);
     }
+
     public long countActiveProjects() {
         return projectRepository.countByArchivedFalse();
     }

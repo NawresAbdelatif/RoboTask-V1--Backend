@@ -3,6 +3,7 @@ package com.example.acwa.Dto;
 import com.example.acwa.entities.ProjectStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 public class ProjectResponseDTO {
@@ -15,7 +16,7 @@ public class ProjectResponseDTO {
     private LocalDate startDate;
 //    private LocalDate endDate;
     private String creatorUsername;
-    private Set<String> collaboratorsUsernames;
+    private List<String> collaboratorsUsernames;
     private boolean archived;
     private Set<CollaboratorDTO> collaborators;
     public Set<CollaboratorDTO> getCollaborators() { return collaborators; }
@@ -82,13 +83,9 @@ public class ProjectResponseDTO {
         this.creatorUsername = creatorUsername;
     }
 
-    public Set<String> getCollaboratorsUsernames() {
-        return collaboratorsUsernames;
-    }
+    public List<String> getCollaboratorsUsernames() { return collaboratorsUsernames; }
+    public void setCollaboratorsUsernames(List<String> collaboratorsUsernames) { this.collaboratorsUsernames = collaboratorsUsernames; }
 
-    public void setCollaboratorsUsernames(Set<String> collaboratorsUsernames) {
-        this.collaboratorsUsernames = collaboratorsUsernames;
-    }
 
     public boolean isArchived() { return archived; }
     public void setArchived(boolean archived) { this.archived = archived; }

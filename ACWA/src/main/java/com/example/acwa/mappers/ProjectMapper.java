@@ -33,7 +33,8 @@ public class ProjectMapper {
         dto.setCollaboratorsUsernames(
                 project.getCollaborators().stream()
                         .map(user -> user.getUsername())
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toList())
+
         );
         dto.setCollaborators(
                 project.getCollaborators().stream()
