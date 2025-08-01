@@ -46,7 +46,9 @@ public class Assemblage {
     @JoinColumn(name = "parent_id")
     private Assemblage parent;
 
-
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_avant_archive")
+    private AssemblageStatut statutAvantArchive;
 
     // --- Getters & Setters ---
 
@@ -82,5 +84,6 @@ public class Assemblage {
 
     public AssemblageStatut getStatut() { return statut; }
     public void setStatut(AssemblageStatut statut) { this.statut = statut; }
-
+    public AssemblageStatut getStatutAvantArchive() { return statutAvantArchive; }
+    public void setStatutAvantArchive(AssemblageStatut statutAvantArchive) { this.statutAvantArchive = statutAvantArchive; }
 }

@@ -100,6 +100,23 @@ public class AssemblageController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}/archive")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    public ResponseEntity<AssemblageResponseDTO> archive(@PathVariable Long id, Authentication auth) {
+        String email = auth.getName();
+        Assemblage assemblage = assemblageService.archiverAssemblage(id, email);
+        return ResponseEntity.ok(AssemblageMapper.toDTO(assemblage));
+    }
+
+    @PutMapping("/{id}/desarchive")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    public ResponseEntity<AssemblageResponseDTO> desarchive(@PathVariable Long id, Authentication auth) {
+        String email = auth.getName();
+        Assemblage assemblage = assemblageService.desarchiverAssemblage(id, email);
+        return ResponseEntity.ok(AssemblageMapper.toDTO(assemblage));
+    }
+
+
 }
 
 

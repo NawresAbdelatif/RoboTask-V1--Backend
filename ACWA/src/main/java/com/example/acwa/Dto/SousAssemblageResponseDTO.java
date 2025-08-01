@@ -1,11 +1,11 @@
 package com.example.acwa.Dto;
 
 import com.example.acwa.entities.StatutSousAssemblage;
-
 import java.time.LocalDateTime;
 
 public class SousAssemblageResponseDTO {
     private Long id;
+    private String reference;
     private String nom;
     private String description;
     private Integer ordre;
@@ -15,59 +15,30 @@ public class SousAssemblageResponseDTO {
     private Long assemblageId;
 
     // Getters & Setters
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getNom() {
-        return nom;
-    }
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
 
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
-    public Integer getOrdre() {
-        return ordre;
-    }
-    public void setOrdre(Integer ordre) {
-        this.ordre = ordre;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public LocalDateTime getDateCreation() {
-        return dateCreation;
-    }
-    public void setDateCreation(LocalDateTime dateCreation) {
-        this.dateCreation = dateCreation;
-    }
+    public Integer getOrdre() { return ordre; }
+    public void setOrdre(Integer ordre) { this.ordre = ordre; }
 
-    public String getCreateurUsername() {
-        return createurUsername;
-    }
-    public void setCreateurUsername(String createurUsername) {
-        this.createurUsername = createurUsername;
-    }
+    public LocalDateTime getDateCreation() { return dateCreation; }
+    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
-    public StatutSousAssemblage getStatut() {
-        return statut;
-    }
-    public void setStatut(StatutSousAssemblage statut) {
-        this.statut = statut;
-    }
+    public String getCreateurUsername() { return createurUsername; }
+    public void setCreateurUsername(String createurUsername) { this.createurUsername = createurUsername; }
 
-    public Long getAssemblageId() {
-        return assemblageId;
-    }
-    public void setAssemblageId(Long assemblageId) {
-        this.assemblageId = assemblageId;
-    }
+    public StatutSousAssemblage getStatut() { return statut; }
+    public void setStatut(StatutSousAssemblage statut) { this.statut = statut; }
+
+    public Long getAssemblageId() { return assemblageId; }
+    public void setAssemblageId(Long assemblageId) { this.assemblageId = assemblageId; }
 }

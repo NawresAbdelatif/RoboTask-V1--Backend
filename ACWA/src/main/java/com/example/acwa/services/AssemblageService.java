@@ -174,4 +174,51 @@ public class AssemblageService {
         assemblageRepository.flush();
     }
 
+    @Transactional
+    public Assemblage archiverAssemblage(Long id, String email) {
+        Assemblage assemblage = assemblageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
+
+        if (!(isAdmin || isCreator)) {
+            throw new RuntimeException("Non autorisé !");
+        }
+
+        if (assemblage.getStatut() != AssemblageStatut.ARCHIVE) {
+            assemblage.setStatutAvantArchive(assemblage.getStatut());
+            assemblage.setStatut(AssemblageStatut.ARCHIVE);
+            assemblageRepository.save(assemblage);
+        }
+        return assemblage;
+    }
+
+    @Transactional
+    public Assemblage desarchiverAssemblage(Long id, String email) {
+        Assemblage assemblage = assemblageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
+
+        if (!(isAdmin || isCreator)) {
+            throw new RuntimeException("Non autorisé !");
+        }
+
+        if (assemblage.getStatut() == AssemblageStatut.ARCHIVE) {
+            AssemblageStatut old = assemblage.getStatutAvantArchive();
+            assemblage.setStatut(old != null ? old : AssemblageStatut.BROUILLON);
+            assemblage.setStatutAvantArchive(null);
+            assemblageRepository.save(assemblage);
+        }
+        return assemblage;
+    }
+
+
+
 }

@@ -29,7 +29,7 @@ public class Project {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "previous_status")
-    private ProjectStatus previousStatus; // <-- AJOUT
+    private ProjectStatus previousStatus;
 
 
 

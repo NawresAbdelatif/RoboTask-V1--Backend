@@ -49,4 +49,17 @@ public class SousAssemblageController {
     public void reorder(@PathVariable Long assemblageId, @RequestBody List<Long> orderedIds, @RequestParam String email) {
         sousAssemblageService.reorderSousAssemblages(assemblageId, orderedIds, email);
     }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    @PutMapping("/{id}/archiver")
+    public void archiver(@PathVariable Long id, @RequestParam String email) {
+        sousAssemblageService.archiverSousAssemblage(id, email);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CREATOR')")
+    @PutMapping("/{id}/desarchiver")
+    public void desarchiver(@PathVariable Long id, @RequestParam String email) {
+        sousAssemblageService.desarchiverSousAssemblage(id, email);
+    }
+
 }

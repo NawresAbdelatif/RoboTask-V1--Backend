@@ -11,4 +11,6 @@ public interface SousAssemblageRepository extends JpaRepository<SousAssemblage, 
     List<SousAssemblage> findByAssemblage(Assemblage assemblage);
 
     List<SousAssemblage> findByAssemblage_Id(Long assemblageId);
+    boolean existsByReference(String reference);
+
 }

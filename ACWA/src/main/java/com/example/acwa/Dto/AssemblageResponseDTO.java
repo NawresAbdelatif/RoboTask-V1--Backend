@@ -13,25 +13,87 @@ public class AssemblageResponseDTO {
     private List<AssemblageResponseDTO> sousAssemblages;
     private String reference;
     private String statut;
+    private String statutAvantArchive;
 
 
     // --- Getters & Setters ---
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public LocalDateTime getDateCreation() { return dateCreation; }
-    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
-    public String getCreatorUsername() { return creatorUsername; }
-    public void setCreatorUsername(String creatorUsername) { this.creatorUsername = creatorUsername; }
-    public Long getParentId() { return parentId; }
-    public void setParentId(Long parentId) { this.parentId = parentId; }
-    public List<AssemblageResponseDTO> getSousAssemblages() { return sousAssemblages; }
-    public void setSousAssemblages(List<AssemblageResponseDTO> sousAssemblages) { this.sousAssemblages = sousAssemblages; }
-    public String getReference() { return reference; }
-    public void setReference(String reference) { this.reference = reference; }
-    public String getStatut() { return statut; }
-    public void setStatut(String statut) { this.statut = statut; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getDateCreation() {
+        return dateCreation;
+    }
+
+    public void setDateCreation(LocalDateTime dateCreation) {
+        this.dateCreation = dateCreation;
+    }
+
+    public String getCreatorUsername() {
+        return creatorUsername;
+    }
+
+    public void setCreatorUsername(String creatorUsername) {
+        this.creatorUsername = creatorUsername;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public List<AssemblageResponseDTO> getSousAssemblages() {
+        return sousAssemblages;
+    }
+
+    public void setSousAssemblages(List<AssemblageResponseDTO> sousAssemblages) {
+        this.sousAssemblages = sousAssemblages;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
+    public String getStatutAvantArchive() {
+        return statutAvantArchive;
+    }
+
+    public void setStatutAvantArchive(String statutAvantArchive) {
+        this.statutAvantArchive = statutAvantArchive;
+    }
 }

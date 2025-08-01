@@ -32,13 +32,17 @@ public class SousAssemblageService {
 
     @Transactional
     @CacheEvict(value = "sousAssemblages", allEntries = true)
-
     public SousAssemblageResponseDTO createSousAssemblage(SousAssemblageRequestDTO dto, String email) {
+        if (dto.getReference() == null || dto.getReference().isEmpty()) {
+            throw new RuntimeException("La référence est obligatoire !");
+        }
+        if (sousAssemblageRepository.existsByReference(dto.getReference())) {
+            throw new RuntimeException("Référence déjà utilisée !");
+        }
         Assemblage assemblage = assemblageRepository.findById(dto.getAssemblageId())
                 .orElseThrow(() -> new RuntimeException("Assemblage parent non trouvé"));
-        User createur = userRepository.findById(dto.getCreateurId())
+        User createur = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Créateur non trouvé"));
-
         boolean isAdmin = createur.getRoles().stream().anyMatch(
                 r -> r.getName().name().equals("ROLE_ADMIN")
         );
@@ -92,6 +96,7 @@ public class SousAssemblageService {
         sousAssemblageRepository.delete(sa);
     }
 
+
     @Transactional
     @CacheEvict(value = "sousAssemblages", allEntries = true)
     public SousAssemblageResponseDTO updateSousAssemblage(Long id, SousAssemblageRequestDTO dto, String email) {
@@ -109,9 +114,19 @@ public class SousAssemblageService {
             throw new RuntimeException("Non autorisé à modifier !");
         }
 
+        // Vérification d’unicité pour reference si on la change
+        if (dto.getReference() != null && !dto.getReference().equals(sa.getReference())) {
+            boolean exists = sousAssemblageRepository.existsByReference(dto.getReference());
+            if (exists) {
+                throw new RuntimeException("La référence est déjà utilisée !");
+            }
+            sa.setReference(dto.getReference());
+        }
+
         sa.setNom(dto.getNom());
         sa.setDescription(dto.getDescription());
         sa.setOrdre(dto.getOrdre());
+
         if (dto.getStatut() != null) {
             sa.setStatut(dto.getStatut());
         }
@@ -119,6 +134,7 @@ public class SousAssemblageService {
         SousAssemblage saved = sousAssemblageRepository.save(sa);
         return SousAssemblageMapper.toDTO(saved);
     }
+
 
     @Transactional(readOnly = true)
     @Cacheable(value = "sousAssemblages")
@@ -154,4 +170,52 @@ public class SousAssemblageService {
         }
         sousAssemblageRepository.flush();
     }
+
+    @Transactional
+    @CacheEvict(value = "sousAssemblages", allEntries = true)
+    public SousAssemblage archiverSousAssemblage(Long id, String email) {
+        SousAssemblage sa = sousAssemblageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sous-assemblage non trouvé"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = sa.getCreateur() != null && sa.getCreateur().getEmail().equals(email);
+
+        if (!(isAdmin || isCreator)) {
+            throw new RuntimeException("Non autorisé !");
+        }
+
+        if (sa.getStatut() != StatutSousAssemblage.ARCHIVE) {
+            sa.setStatutAvantArchive(sa.getStatut());
+            sa.setStatut(StatutSousAssemblage.ARCHIVE);
+            sousAssemblageRepository.save(sa);
+        }
+        return sa;
+    }
+
+    @Transactional
+    @CacheEvict(value = "sousAssemblages", allEntries = true)
+    public SousAssemblage desarchiverSousAssemblage(Long id, String email) {
+        SousAssemblage sa = sousAssemblageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sous-assemblage non trouvé"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = sa.getCreateur() != null && sa.getCreateur().getEmail().equals(email);
+
+        if (!(isAdmin || isCreator)) {
+            throw new RuntimeException("Non autorisé !");
+        }
+
+        if (sa.getStatut() == StatutSousAssemblage.ARCHIVE) {
+            StatutSousAssemblage old = sa.getStatutAvantArchive();
+            sa.setStatut(old != null ? old : StatutSousAssemblage.BROUILLON);
+            sa.setStatutAvantArchive(null);
+            sousAssemblageRepository.save(sa);
+        }
+        return sa;
+    }
+
 }

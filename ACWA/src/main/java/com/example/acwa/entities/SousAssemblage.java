@@ -10,6 +10,9 @@ public class SousAssemblage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String reference;
+
     @Column(nullable = false)
     private String nom;
 
@@ -26,67 +29,45 @@ public class SousAssemblage {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatutSousAssemblage statut = StatutSousAssemblage.NON_DEMARRE;
+    private StatutSousAssemblage statut = StatutSousAssemblage.BROUILLON;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assemblage_id", nullable = false)
     private Assemblage assemblage;
 
-    // --- Getters & Setters ---
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_avant_archive")
+    private StatutSousAssemblage statutAvantArchive;
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // Getters & Setters
 
-    public String getNom() {
-        return nom;
-    }
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
 
-    public Integer getOrdre() {
-        return ordre;
-    }
-    public void setOrdre(Integer ordre) {
-        this.ordre = ordre;
-    }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
-    public LocalDateTime getDateCreation() {
-        return dateCreation;
-    }
-    public void setDateCreation(LocalDateTime dateCreation) {
-        this.dateCreation = dateCreation;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public User getCreateur() {
-        return createur;
-    }
-    public void setCreateur(User createur) {
-        this.createur = createur;
-    }
+    public Integer getOrdre() { return ordre; }
+    public void setOrdre(Integer ordre) { this.ordre = ordre; }
 
-    public StatutSousAssemblage getStatut() {
-        return statut;
-    }
-    public void setStatut(StatutSousAssemblage statut) {
-        this.statut = statut;
-    }
+    public LocalDateTime getDateCreation() { return dateCreation; }
+    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
-    public Assemblage getAssemblage() {
-        return assemblage;
-    }
-    public void setAssemblage(Assemblage assemblage) {
-        this.assemblage = assemblage;
-    }
+    public User getCreateur() { return createur; }
+    public void setCreateur(User createur) { this.createur = createur; }
+
+    public StatutSousAssemblage getStatut() { return statut; }
+    public void setStatut(StatutSousAssemblage statut) { this.statut = statut; }
+
+    public Assemblage getAssemblage() { return assemblage; }
+    public void setAssemblage(Assemblage assemblage) { this.assemblage = assemblage; }
+
+    public StatutSousAssemblage getStatutAvantArchive() { return statutAvantArchive; }
+    public void setStatutAvantArchive(StatutSousAssemblage statutAvantArchive) { this.statutAvantArchive = statutAvantArchive; }
 }

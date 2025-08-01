@@ -23,5 +23,6 @@ public interface AssemblageRepository extends JpaRepository<Assemblage, Long> {
     Page<Assemblage> findByProjectAndNomContainingIgnoreCaseAndStatut(
             Project project, String nom, AssemblageStatut statut, Pageable pageable);
 
+    Page<Assemblage> findByProjectAndStatutNot(Project project, AssemblageStatut statut, Pageable pageable);
 
 }

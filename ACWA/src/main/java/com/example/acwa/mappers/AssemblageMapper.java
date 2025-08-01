@@ -26,6 +26,10 @@ public class AssemblageMapper {
                     .collect(Collectors.toList());
             dto.setSousAssemblages(sousDtos);
         }
+        dto.setStatutAvantArchive(
+                entity.getStatutAvantArchive() != null ? entity.getStatutAvantArchive().name() : null
+        );
+
         return dto;
     }
 
@@ -36,6 +40,7 @@ public class AssemblageMapper {
         entity.setParent(parent);
         entity.setReference(dto.getReference());
         entity.setStatut(dto.getStatut() != null ? dto.getStatut() : AssemblageStatut.BROUILLON);
+
         return entity;
     }
 
