@@ -30,6 +30,14 @@ public class SousAssemblageService {
     @Autowired
     private UserRepository userRepository;
 
+    private boolean isAdminCreatorOrCollaborator(User user, Assemblage assemblage) {
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = assemblage.getProject().getCreator().equals(user);
+        boolean isCollaborator = assemblage.getProject().getCollaborators().contains(user);
+        return isAdmin || isCreator || isCollaborator;
+    }
+
+
     @Transactional
     @CacheEvict(value = "sousAssemblages", allEntries = true)
     public SousAssemblageResponseDTO createSousAssemblage(SousAssemblageRequestDTO dto, String email) {
@@ -43,14 +51,8 @@ public class SousAssemblageService {
                 .orElseThrow(() -> new RuntimeException("Assemblage parent non trouvé"));
         User createur = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Créateur non trouvé"));
-        boolean isAdmin = createur.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreatorOrCollaborator =
-                createur.equals(assemblage.getCreator()) ||
-                        (assemblage.getProject() != null && assemblage.getProject().getCollaborators().contains(createur));
 
-        if (!(isAdmin || isCreatorOrCollaborator)) {
+        if (!isAdminCreatorOrCollaborator(createur, assemblage)) {
             throw new RuntimeException("Vous n'avez pas les droits de créer un sous-assemblage !");
         }
 
@@ -85,12 +87,8 @@ public class SousAssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreator = sa.getCreateur() != null && user.getId().equals(sa.getCreateur().getId());
-
-        if (!(isAdmin || isCreator)) {
+        Assemblage assemblage = sa.getAssemblage();
+        if (!isAdminCreatorOrCollaborator(user, assemblage)) {
             throw new RuntimeException("Non autorisé à supprimer !");
         }
         sousAssemblageRepository.delete(sa);
@@ -105,16 +103,11 @@ public class SousAssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreator = sa.getCreateur() != null && user.getId().equals(sa.getCreateur().getId());
-
-        if (!(isAdmin || isCreator)) {
+        Assemblage assemblage = sa.getAssemblage();
+        if (!isAdminCreatorOrCollaborator(user, assemblage)) {
             throw new RuntimeException("Non autorisé à modifier !");
         }
 
-        // Vérification d’unicité pour reference si on la change
         if (dto.getReference() != null && !dto.getReference().equals(sa.getReference())) {
             boolean exists = sousAssemblageRepository.existsByReference(dto.getReference());
             if (exists) {
@@ -151,14 +144,7 @@ public class SousAssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreatorOrCollaborator =
-                user.equals(assemblage.getCreator()) ||
-                        (assemblage.getProject() != null && assemblage.getProject().getCollaborators().contains(user));
-
-        if (!(isAdmin || isCreatorOrCollaborator)) {
+        if (!isAdminCreatorOrCollaborator(user, assemblage)) {
             throw new RuntimeException("Non autorisé !");
         }
 
@@ -171,6 +157,7 @@ public class SousAssemblageService {
         sousAssemblageRepository.flush();
     }
 
+
     @Transactional
     @CacheEvict(value = "sousAssemblages", allEntries = true)
     public SousAssemblage archiverSousAssemblage(Long id, String email) {
@@ -179,10 +166,8 @@ public class SousAssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
-        boolean isCreator = sa.getCreateur() != null && sa.getCreateur().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        Assemblage assemblage = sa.getAssemblage();
+        if (!isAdminCreatorOrCollaborator(user, assemblage)) {
             throw new RuntimeException("Non autorisé !");
         }
 
@@ -194,6 +179,7 @@ public class SousAssemblageService {
         return sa;
     }
 
+
     @Transactional
     @CacheEvict(value = "sousAssemblages", allEntries = true)
     public SousAssemblage desarchiverSousAssemblage(Long id, String email) {
@@ -202,10 +188,8 @@ public class SousAssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
-        boolean isCreator = sa.getCreateur() != null && sa.getCreateur().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        Assemblage assemblage = sa.getAssemblage();
+        if (!isAdminCreatorOrCollaborator(user, assemblage)) {
             throw new RuntimeException("Non autorisé !");
         }
 

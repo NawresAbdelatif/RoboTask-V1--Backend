@@ -27,6 +27,15 @@ public class AssemblageService {
 
     @Autowired
     private UserRepository userRepository;
+
+    private boolean isAdminCreatorOrCollaborator(User user, Project project) {
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isCreator = project.getCreator().equals(user);
+        boolean isCollaborator = project.getCollaborators().contains(user);
+        return isAdmin || isCreator || isCollaborator;
+    }
+
+
     @Transactional
     @CacheEvict(value = "assemblages", allEntries = true)
     public Assemblage createAssemblage(Long projectId, AssemblageRequestDTO dto, String email) {
@@ -35,13 +44,7 @@ public class AssemblageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreatorOrCollaborator =
-                user.equals(project.getCreator()) || project.getCollaborators().contains(user);
-
-        if (!(isAdmin || isCreatorOrCollaborator)) {
+        if (!isAdminCreatorOrCollaborator(user, project)) {
             throw new RuntimeException("Vous n'avez pas les droits de créer un assemblage !");
         }
 
@@ -66,6 +69,7 @@ public class AssemblageService {
 
         return assemblageRepository.save(assemblage);
     }
+
 
 
     @Transactional(readOnly = true)
@@ -95,24 +99,22 @@ public class AssemblageService {
     }
 
 
-        @Transactional
+    @Transactional
     @CacheEvict(value = "assemblages", allEntries = true)
     public void deleteAssemblage(Long id, String email) {
         Assemblage assemblage = assemblageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        Project project = assemblage.getProject();
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        if (!isAdminCreatorOrCollaborator(user, project)) {
             throw new RuntimeException("Non autorisé à supprimer !");
         }
+
         assemblageRepository.delete(assemblage);
     }
+
 
 
     @Transactional
@@ -122,13 +124,9 @@ public class AssemblageService {
                 .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        Project project = assemblage.getProject();
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(
-                r -> r.getName().name().equals("ROLE_ADMIN")
-        );
-        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        if (!isAdminCreatorOrCollaborator(user, project)) {
             throw new RuntimeException("Non autorisé à modifier !");
         }
 
@@ -139,7 +137,6 @@ public class AssemblageService {
 
         return assemblageRepository.save(assemblage);
     }
-
 
 
     @Transactional(readOnly = true)
@@ -180,11 +177,9 @@ public class AssemblageService {
                 .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        Project project = assemblage.getProject();
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
-        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        if (!isAdminCreatorOrCollaborator(user, project)) {
             throw new RuntimeException("Non autorisé !");
         }
 
@@ -202,11 +197,9 @@ public class AssemblageService {
                 .orElseThrow(() -> new RuntimeException("Assemblage non trouvé"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        Project project = assemblage.getProject();
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
-        boolean isCreator = assemblage.getCreator().getEmail().equals(email);
-
-        if (!(isAdmin || isCreator)) {
+        if (!isAdminCreatorOrCollaborator(user, project)) {
             throw new RuntimeException("Non autorisé !");
         }
 
@@ -218,6 +211,7 @@ public class AssemblageService {
         }
         return assemblage;
     }
+
 
 
 
